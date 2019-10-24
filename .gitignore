@@ -196,3 +196,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.idea/kpcn.iml
+.idea/markdown-navigator.xml
+.idea/markdown-navigator/
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
