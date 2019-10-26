@@ -3,3 +3,5 @@ This directory contains code for a command line tool that uniformly samples a po
 2. Make a build directory: `makedir build & cd build`.
 3. Build the code by running `cmake ..` and then `make`.
 4. Run `./mesh_sampling` to see the command line usage.
+
+This executable can be used for a single model, but is usually called via the `preprocess_complete_pc.py` script which runs for many models using multi-threading.
