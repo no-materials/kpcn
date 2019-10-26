@@ -17,7 +17,7 @@ from os import makedirs, listdir
 from os.path import exists, join, isfile, isdir
 
 # Dataset parent class
-# from datasets.common import Dataset
+from datasets.common import Dataset
 
 # Subsampling extension
 import cpp_wrappers.cpp_subsampling.grid_subsampling as cpp_subsampling

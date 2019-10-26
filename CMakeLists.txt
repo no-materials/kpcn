@@ -3,4 +3,7 @@ project(kpcn)
 
 set(CMAKE_CXX_STANDARD 14)
 
+
+add_subdirectory(preprocess/sample)
+
 #add_executable(kpcn main.cpp)

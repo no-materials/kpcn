@@ -19,6 +19,9 @@
      - matplotlib (for visualization)
      - mayavi (for visualization)
      - PyQt5 (for visualization)
+     - Open3D (for point cloud I/O)
+     - bpy (for rendering depth images via blender)
+     - OpenEXR & Imath
      
 * Compile the customized Tensorflow operators located in `tf_custom_ops`. Open a terminal in this folder, and run:
 
