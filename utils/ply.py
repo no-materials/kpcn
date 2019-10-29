@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+from os.path import exists
 
 # Define PLY types
 ply_dtypes = dict([
@@ -43,7 +44,7 @@ def parse_header(plyfile, ext):
     while b'end_header' not in line and line != b'':
         line = plyfile.readline()
 
-        if b'element' in line:
+        if b'element vertex' in line:
             line = line.split()
             num_points = int(line[2])
 
@@ -102,6 +103,8 @@ def read_ply(filename, triangular_mesh=False):
         data stored in the file
     """
 
+    if not exists(filename):
+        raise ValueError("File %s does not exist!" % filename)
     with open(filename, 'rb') as plyfile:
         # Check if the file start with ply
         if b'ply' not in plyfile.readline():

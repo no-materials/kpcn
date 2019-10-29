@@ -2,7 +2,6 @@ import concurrent.futures
 import subprocess
 import logging
 import os
-import tqdm
 import multiprocessing
 import argparse
 
@@ -11,7 +10,7 @@ from utils import common
 # CONFIG THESE PARAMS --------------------
 src_dataset_dir = "/Volumes/warm_blue/datasets/ShapeNetV1"
 dataset = "shapenetV1"
-split_type = "one_model"  # train/valid/test/test_novel
+split_type = "test"  # train/valid/test/test_novel
 num_scans = 2
 blender_path = "/Volumes/warm_blue/blender-git/build_darwin_full/bin/Blender.app/Contents/MacOS/Blender"
 # ----------------------------------------
@@ -69,26 +68,27 @@ with open(model_list_file) as file:
 # if os.path.isdir(render_out_dir):
 #     os.rmdir(render_out_dir)
 
-for i, cat_model_id in tqdm.tqdm(enumerate(model_list)):
+with concurrent.futures.ThreadPoolExecutor(max_workers=int(num_threads)) as executor:
+    for i, cat_model_id in enumerate(model_list):
 
-    cat, model_id = cat_model_id.split('/')
-    if not os.path.isdir(os.path.join(target_data_dir, cat)):
-        os.makedirs(os.path.join(target_data_dir, cat))
+        cat, model_id = cat_model_id.split('/')
+        if not os.path.isdir(os.path.join(target_data_dir, cat)):
+            os.makedirs(os.path.join(target_data_dir, cat))
 
-    target_mesh_dir = os.path.join(target_data_dir, cat, model_id)
-    if not os.path.isdir(target_mesh_dir):
-        os.makedirs(target_mesh_dir)
+        target_mesh_dir = os.path.join(target_data_dir, cat, model_id)
+        if not os.path.isdir(target_mesh_dir):
+            os.makedirs(target_mesh_dir)
 
-    # Check if num_scans matches with existing num of files in target dir - if not, only then preprocess
-    if num_scans != len([f for f in os.listdir(target_mesh_dir)
-                         if f.endswith('.ply') and os.path.isfile(os.path.join(target_mesh_dir, f))]):
-        mesh_src_file = os.path.join(src_dataset_dir, cat, model_id, 'model.obj')
+        # Check if num_scans matches with existing num of files in target dir - if not, only then preprocess
+        # TODO: fix case where num scan < num of plys in mesh dir
+        if num_scans != len([f for f in os.listdir(target_mesh_dir)
+                             if f.endswith('.ply') and os.path.isfile(os.path.join(target_mesh_dir, f))]):
+            mesh_src_file = os.path.join(src_dataset_dir, cat, model_id, 'model.obj')
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=int(num_threads)) as executor:
             executor.submit(
                 simulate_depth_scan,
                 cat_model_id,
                 target_mesh_dir
             )
 
-        executor.shutdown()
+    executor.shutdown()

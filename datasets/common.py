@@ -14,11 +14,13 @@ import cpp_wrappers.cpp_subsampling.grid_subsampling as cpp_subsampling
 
 from utils.ply import read_ply
 
+
 # Load custom operation
-tf_neighbors_module = tf.load_op_library('tf_custom_ops/tf_neighbors.so')
-tf_batch_neighbors_module = tf.load_op_library('tf_custom_ops/tf_batch_neighbors.so')
-tf_subsampling_module = tf.load_op_library('tf_custom_ops/tf_subsampling.so')
-tf_batch_subsampling_module = tf.load_op_library('tf_custom_ops/tf_batch_subsampling.so')
+# TODO: fix these
+# tf_neighbors_module = tf.load_op_library('tf_custom_ops/tf_neighbors.so')
+# tf_batch_neighbors_module = tf.load_op_library('tf_custom_ops/tf_batch_neighbors.so')
+# tf_subsampling_module = tf.load_op_library('tf_custom_ops/tf_subsampling.so')
+# tf_batch_subsampling_module = tf.load_op_library('tf_custom_ops/tf_batch_subsampling.so')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -83,20 +85,24 @@ class Dataset:
         # Parameters for the Labels (some attr are not used for completion task)
         # *************************
 
-        # Number of different labels
-        self.num_classes = 0
+        # Number of different categories
+        self.num_categories = 0
 
         # The different label values
-        self.label_values = []
+        self.synset_values = []
 
-        # The different label names
-        self.label_names = []
+        # The different category names
+        self.category_names = []
 
-        # Dict from labels to [0:num_classes] indices
-        self.label_to_idx = {}
+        # Dict from synset to [0:num_categories] indices
+        self.synset_to_idx = {}
+
+        self.category_to_synset = {}
 
         # Dict from labels to names
         self.label_to_names = {}
+
+        self.synset_to_category = {}
 
         # Other Parameters
         # ****************
@@ -113,4 +119,26 @@ class Dataset:
         # Number of threads used in input pipeline
         self.num_threads = 1
 
+    def init_labels(self):
+        # Initiate all label parameters given the synset_to_category dict
+        self.num_categories = len(self.synset_to_category)
+        self.synset_values = np.sort([k for k, v in self.synset_to_category.items()])
+        self.category_names = [self.synset_to_category[k] for k in self.synset_values]
+        self.synset_to_idx = {l: i for i, l in enumerate(self.synset_values)}
+        self.category_to_synset = {v: k for k, v in self.synset_to_category.items()}
 
+    # Input pipeline methods
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def init_input_pipeline(self, config):
+        """
+        Prepare the input pipeline with tf.Dataset class
+        """
+
+        ######################
+        # Calibrate parameters
+        ######################
+
+        print('Initiating input pipelines')
+
+        pass

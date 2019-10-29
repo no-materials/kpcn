@@ -11,9 +11,9 @@ from utils import common
 # CONFIG THESE PARAMS --------------------
 src_dataset_dir = "/Volumes/warm_blue/datasets/ShapeNetV1"
 dataset = "shapenetV1"
-split_type = "train"  # train/valid/test/test_novel
+split_type = "valid"  # train/valid/test/test_novel
 executable = "sample/build/mesh_sampling"
-# ----------------------------------------
+# ----------------------------------------786f18c5f99f7006b1d1509c24a9f631
 
 
 arg_parser = argparse.ArgumentParser(

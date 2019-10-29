@@ -202,3 +202,9 @@ venv.bak/
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+
+# Preprocessed split ply files
+/data/*/train/
+/data/*/valid/
+/data/*/test/
+/data/*/test_novel/

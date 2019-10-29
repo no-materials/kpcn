@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
         if (ply_file_indices.size() == 2)
             pcl::io::savePLYFileBinary(argv[ply_file_indices[1]], *cloud_xyz);
         else
-            pcl::io::savePLYFileASCII(argv[ply_file_indices[0]], *cloud_xyz);
+            pcl::io::savePLYFileBinary(argv[ply_file_indices[0]], *cloud_xyz);
     } else {
 //        savePCDFileASCII(argv[pcd_file_indices[0]], *cloud);
         if (ply_file_indices.size() == 2)

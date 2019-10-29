@@ -98,7 +98,7 @@ if __name__ == '__main__':
     bpy.ops.import_scene.obj(filepath=model_path)
 
     # Rotate model by 90 degrees around x-axis (z-up => y-up) to match ShapeNet's coordinates
-    bpy.ops.transform.rotate(value=-np.pi / 2, orient_axis='X')
+    bpy.ops.transform.rotate(value=np.pi / 2, orient_axis='X')
 
     # Render
     for i in range(num_scans):
