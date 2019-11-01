@@ -16,8 +16,8 @@ class Config:
     # Type of network model
     network_model = ''
 
-    # Number of classes in the dataset (NOT USED FOR COMPLETION TASK)
-    num_classes = 0
+    # Number of categories in the dataset
+    num_categories = 0
 
     # Dim of input points
     in_points_dim = 3
@@ -177,11 +177,11 @@ class Config:
                 elif line_info[0] == 'augment_symmetries':
                     self.augment_symmetries = [bool(int(b)) for b in line_info[2:]]
 
-                elif line_info[0] == 'num_classes':
+                elif line_info[0] == 'num_categories':
                     if len(line_info) > 3:
-                        self.num_classes = [int(c) for c in line_info[2:]]
+                        self.num_categories = [int(c) for c in line_info[2:]]
                     else:
-                        self.num_classes = int(line_info[2])
+                        self.num_categories = int(line_info[2])
 
                 else:
 
@@ -207,13 +207,13 @@ class Config:
             text_file.write('# ****************\n\n')
             text_file.write('dataset = {:s}\n'.format(self.dataset))
             text_file.write('network_model = {:s}\n'.format(self.network_model))
-            if type(self.num_classes) is list:
-                text_file.write('num_classes =')
-                for n in self.num_classes:
+            if type(self.num_categories) is list:
+                text_file.write('num_categories =')
+                for n in self.num_categories:
                     text_file.write(' {:d}'.format(n))
                 text_file.write('\n')
             else:
-                text_file.write('num_classes = {:d}\n'.format(self.num_classes))
+                text_file.write('num_categories = {:d}\n'.format(self.num_categories))
             text_file.write('in_points_dim = {:d}\n'.format(self.in_points_dim))
             text_file.write('in_features_dim = {:d}\n'.format(self.in_features_dim))
             text_file.write('in_radius = {:.3f}\n'.format(self.in_radius))
