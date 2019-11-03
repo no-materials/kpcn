@@ -6,7 +6,7 @@ import sys
 # Custom libs
 from utils.config import Config
 # from utils.trainer import ModelTrainer
-# from models.KPFCNN_model import KernelPointFCNN
+from models.KPCN_model import KernelPointCompletionNetwork
 
 # Dataset
 from datasets.ShapeNetV1 import ShapeNetV1Dataset
@@ -178,3 +178,18 @@ if __name__ == '__main__':
 
     # Initialize input pipelines
     dataset.init_input_pipeline(config)
+
+    # Test the input pipeline alone with this debug function
+    # dataset.check_input_pipeline_timing(config)
+    # dataset.check_input_pipeline_neighbors(config)
+
+    ##############
+    # Define Model
+    ##############
+
+    print('Creating Model')
+    print('**************\n')
+    t1 = time.time()
+
+    # Model class
+    model = KernelPointCompletionNetwork(dataset.flat_inputs, config)

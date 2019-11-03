@@ -520,7 +520,7 @@ class Dataset:
                 try:
                     # Get next inputs
                     t = [time.time()]
-                    ops = flat_inputs[config.num_layers:2 * config.num_layers]
+                    ops = flat_inputs[config.num_layers:2 * config.num_layers]  # neighbor_mat is 5th index of flat in
                     neighbors = sess.run(ops)
                     t += [time.time()]
 
