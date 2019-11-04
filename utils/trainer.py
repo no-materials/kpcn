@@ -70,8 +70,8 @@ class ModelTrainer:
 
         # Create a session for running Ops on the Graph.
         # TODO: add auto check device
-        # on_CPU = False
-        on_CPU = True
+        on_CPU = False
+        # on_CPU = True
         if on_CPU:
             cProto = tf.ConfigProto(device_count={'GPU': 0})
         else:
