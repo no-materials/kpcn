@@ -5,7 +5,7 @@ import sys
 
 # Custom libs
 from utils.config import Config
-# from utils.trainer import ModelTrainer
+from utils.trainer import ModelTrainer
 from models.KPCN_model import KernelPointCompletionNetwork
 
 # Dataset
@@ -94,12 +94,21 @@ class ShapeNetV1Config(Config):
     use_batch_norm = True
     batch_norm_momentum = 0.98
 
+    num_coarse = 1024
+    grid_size = 4
+    grid_scale = 0.05
+    num_fine = grid_size ** 2 * num_coarse
+
     #####################
     # Training parameters
     #####################
 
     # Maximal number of epochs
     max_epoch = 500
+
+    # Hyperparameter alpha for distance loss weighting
+    alphas = [0.01, 0.1, 0.5, 1.0]
+    alpha_epoch = [1, 10000, 20000, 50000]
 
     # Learning rate management
     learning_rate = 1e-2
@@ -193,3 +202,20 @@ if __name__ == '__main__':
 
     # Model class
     model = KernelPointCompletionNetwork(dataset.flat_inputs, config)
+
+    # Trainer class
+    trainer = ModelTrainer(model)
+    t2 = time.time()
+
+    print('\n----------------')
+    print('Done in {:.1f} s'.format(t2 - t1))
+    print('----------------\n')
+
+    ################
+    # Start training
+    ################
+
+    print('Start Training')
+    print('**************\n')
+
+    trainer.train(model, dataset)

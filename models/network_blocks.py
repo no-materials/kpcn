@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 import kernels.convolution_ops as conv_ops
-
+from utils.metrics import chamfer, earth_mover
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
@@ -133,6 +133,21 @@ def leaky_relu(features, alpha=0.2):
 #           Convolution blocks
 #       \************************/
 #
+
+def unary_block(layer_ind, inputs, features, radius, fdim, config, training):
+    """
+    Block performing a simple 1x1 convolution
+    """
+
+    w = weight_variable([int(features.shape[1]), fdim])
+    x = conv_ops.unary_convolution(features, w)
+    x = leaky_relu(batch_norm(x,
+                              config.use_batch_norm,
+                              config.batch_norm_momentum,
+                              training))
+
+    return x
+
 
 def simple_block(layer_ind, inputs, features, radius, fdim, config, training):
     """
@@ -365,6 +380,17 @@ def resnetb_deformable_strided_block(layer_ind, inputs, features, radius, fdim, 
     return leaky_relu(x + shortcut)
 
 
+def nearest_upsample_block(layer_ind, inputs, features, radius, fdim, config, training):
+    """
+    Block performing an upsampling by nearest interpolation
+    """
+
+    with tf.variable_scope('nearest_upsample'):
+        upsampled_features = closest_pool(features, inputs['upsamples'][layer_ind - 1])
+
+    return upsampled_features
+
+
 def get_block_ops(block_name):
     if block_name == 'unary':
         return unary_block
@@ -510,4 +536,88 @@ def assemble_KPCN_blocks(inputs, config, dropout_prob):
     F = assemble_CNN_blocks(inputs, config, dropout_prob)
     features = F[-1]
 
+    # Current radius of convolution and feature dimension
+    layer = config.num_layers - 1
+    r = config.first_subsampling_dl * config.density_parameter * 2 ** layer
+    fdim = config.first_features_dim * 2 ** layer  # if you use resnet, fdim is actually 2 times that
 
+    # Boolean of training
+    training = dropout_prob < 0.99
+
+    # Find first upsampling block
+    start_i = 0
+    for block_i, block in enumerate(config.architecture):
+        if 'upsample' in block:
+            start_i = block_i
+            break
+
+    # Loop over upsampling blocks
+    block_in_layer = 0
+    for block_i, block in enumerate(config.architecture[start_i:]):
+
+        with tf.variable_scope('uplayer_{:d}/{:s}_{:d}'.format(layer, block, block_in_layer)):
+
+            # Get the function for this layer
+            block_ops = get_block_ops(block)
+
+            # Apply the layer function defining tf ops
+            features = block_ops(layer,
+                                 inputs,
+                                 features,
+                                 r,
+                                 fdim,
+                                 config,
+                                 training)
+
+        # Index of block in this layer
+        block_in_layer += 1
+
+        # Detect change to a subsampled layer
+        if 'upsample' in block:
+            # Update radius and feature dimension for next layer
+            layer -= 1
+            r *= 0.5
+            fdim = fdim // 2
+            block_in_layer = 0
+
+            # Concatenate with CNN feature map
+            features = tf.concat((features, F[layer]), axis=1)
+
+    return features
+
+
+def completion_head(features, config, dropout_prob):
+    # Boolean of training
+    training = dropout_prob < 0.99
+
+    # Fully connected layer2
+    with tf.variable_scope('fc1'):
+        w = weight_variable([int(features.shape[1]), 1024])
+        features = leaky_relu(batch_norm(tf.matmul(features, w),
+                                         config.use_batch_norm,
+                                         config.batch_norm_momentum,
+                                         training))
+    with tf.variable_scope('fc2'):
+        w = weight_variable([1024, config.num_coarse * 3])
+        features = leaky_relu(batch_norm(tf.matmul(features, w),
+                                         config.use_batch_norm,
+                                         config.batch_norm_momentum,
+                                         training))
+
+    coarse = tf.reshape(features, [-1, config.num_coarse, 3])
+
+    return coarse
+
+
+# TODO: change this to Chamfer Distance & EMD - add fine...foldingnet...
+# TODO: add dynamic alpha tf variable
+def completion_loss(coarse, inputs, alpha, batch_average=False):
+
+    gt_ds = inputs['complete_points'][:coarse.shape[1], :]
+    loss_coarse = earth_mover(coarse, gt_ds)
+
+    # loss_fine = chamfer(fine, gt)
+    #
+    # loss = loss_coarse + alpha * loss_fine
+
+    return loss_coarse
