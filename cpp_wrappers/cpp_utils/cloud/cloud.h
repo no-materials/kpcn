@@ -26,6 +26,7 @@
 #include <numeric>
 #include <iostream>
 #include <iomanip>
+#include <math.h>
 
 #include <time.h>
 
