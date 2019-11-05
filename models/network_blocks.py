@@ -12,6 +12,7 @@ import tensorflow as tf
 import kernels.convolution_ops as conv_ops
 from utils.metrics import chamfer, earth_mover
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 #
 #           Utilities
@@ -612,8 +613,10 @@ def completion_head(features, config, dropout_prob):
 # TODO: change this to Chamfer Distance & EMD - add fine...foldingnet...
 # TODO: add dynamic alpha tf variable
 def completion_loss(coarse, inputs, alpha, batch_average=False):
-
+    print(inputs['complete_points'].shape)
+    print(coarse.shape)
     gt_ds = inputs['complete_points'][:coarse.shape[1], :]
+    print(gt_ds.shape)
     loss_coarse = earth_mover(coarse, gt_ds)
 
     # loss_fine = chamfer(fine, gt)
