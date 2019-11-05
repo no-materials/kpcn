@@ -102,6 +102,7 @@ class KernelPointCompletionNetwork:
 
             self.output_loss = completion_loss(self.coarse,
                                                self.inputs,
+                                               self.alpha,
                                                batch_average=self.config.batch_averaged_loss)
 
             # Add regularization
