@@ -151,41 +151,10 @@ class ModelTrainer:
         # TODO: change this after integrating pcn losses
         with tf.variable_scope('results'):
 
-            if len(model.config.ignored_label_inds) > 0:
-                pass
-                # #  Boolean mask of points that should be ignored
-                # ignored_bool = tf.zeros_like(model.labels, dtype=tf.bool)
-                # for ign_label in model.config.ignored_label_inds:
-                #     ignored_bool = tf.logical_or(ignored_bool, model.labels == ign_label)
-                #
-                # #  Collect logits and labels that are not ignored
-                # inds = tf.squeeze(tf.where(tf.logical_not(ignored_bool)))
-                # new_logits = tf.gather(model.logits, inds, axis=0)
-                # new_labels = tf.gather(model.labels, inds, axis=0)
-                #
-                # #  Reduce label values in the range of logit shape
-                # reducing_list = tf.range(model.config.num_classes, dtype=tf.int32)
-                # inserted_value = tf.zeros((1,), dtype=tf.int32)
-                # for ign_label in model.config.ignored_label_inds:
-                #     reducing_list = tf.concat([reducing_list[:ign_label], inserted_value, reducing_list[ign_label:]], 0)
-                #     new_labels = tf.gather(reducing_list, new_labels)
-                #
-                # # Metrics
-                # self.correct_prediction = tf.nn.in_top_k(new_logits, new_labels, 1)
-                # self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
-                # self.prob_logits = tf.nn.softmax(new_logits)
-
-            else:
-
-                # Metrics
-                # self.correct_prediction = tf.nn.in_top_k(model.logits, model.labels, 1)
-                # self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
-                # self.prob_logits = tf.nn.softmax(model.logits)
-
-                gt_ds = model.inputs['complete_points'][:model.coarse.shape[1], :]
-                self.coarse_earth_mover = earth_mover(model.coarse, gt_ds)
-                self.coarse_chamfer = chamfer(model.coarse, gt_ds)
-                # TODO: dont have 2 sep losses fine & coarse, but one mixed with alpha...
+            gt_ds = tf.reshape(model.inputs['complete_points'], [-1, model.coarse.shape[1], 3])
+            self.coarse_earth_mover = earth_mover(model.coarse, gt_ds)
+            self.coarse_chamfer = chamfer(model.coarse, gt_ds)
+            # TODO: dont have 2 sep losses fine & coarse, but one mixed with alpha...
 
         return
 
