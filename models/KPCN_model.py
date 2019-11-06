@@ -73,6 +73,10 @@ class KernelPointCompletionNetwork:
             self.inputs['augment_rotations'] = flat_inputs[ind]
             ind += 1
             self.inputs['object_inds'] = flat_inputs[ind]
+            ind += 1
+            self.inputs['partial_sizes'] = flat_inputs[ind]
+            ind += 1
+            self.inputs['complete_sizes'] = flat_inputs[ind]
 
             # Dropout placeholder
             self.dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')

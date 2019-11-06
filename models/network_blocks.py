@@ -599,22 +599,23 @@ def completion_head(features, config, dropout_prob):
                                          config.batch_norm_momentum,
                                          training))
     with tf.variable_scope('fc2'):
-        w = weight_variable([1024, config.num_coarse * 3])
+        w = weight_variable([1024,  3])
         features = leaky_relu(batch_norm(tf.matmul(features, w),
                                          config.use_batch_norm,
                                          config.batch_norm_momentum,
                                          training))
 
-    return tf.reshape(features, [config.num_coarse, 3])
+    # return tf.reshape(features, [-1, config.num_coarse, 3])
+    return features
 
 
 # TODO: change this to Chamfer Distance & EMD - add fine...foldingnet...
 # TODO: add dynamic alpha tf variable
 def completion_loss(coarse, inputs, alpha, batch_average=False):
-    print(inputs['complete_points'].shape)
-    print(coarse.shape)
-    gt_ds = inputs['complete_points'][:coarse.shape[0], :]
-    print(gt_ds.shape)
+    # print(inputs['complete_points'].shape)
+    # print(coarse.shape)
+    gt_ds = inputs['complete_points']
+    # print(gt_ds.shape)
     loss_coarse = earth_mover(coarse, gt_ds)
 
     # loss_fine = chamfer(fine, gt)

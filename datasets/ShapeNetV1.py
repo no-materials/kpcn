@@ -336,7 +336,8 @@ class ShapeNetV1Dataset(Dataset):
                            np.concatenate(tcp_list, axis=0),
                            np.array(tcat_list, dtype=np.unicode_),
                            np.array(ti_list, dtype=np.int32),
-                           np.array([tp.shape[0] for tp in tpp_list]))
+                           np.array([tp.shape[0] for tp in tpp_list]),
+                           np.array([tc.shape[0] for tc in tcp_list]))
                     tpp_list = []
                     tcp_list = []
                     tcat_list = []
@@ -356,21 +357,23 @@ class ShapeNetV1Dataset(Dataset):
                    np.concatenate(tcp_list, axis=0),
                    np.array(tcat_list, dtype=np.unicode_),
                    np.array(ti_list, dtype=np.int32),
-                   np.array([tp.shape[0] for tp in tpp_list]))
+                   np.array([tp.shape[0] for tp in tpp_list]),
+                   np.array([tc.shape[0] for tc in tcp_list]))
 
         ##################
         # Return generator
         ##################
 
         # Generator types and shapes
-        gen_types = (tf.float32, tf.float32, tf.string, tf.int32, tf.int32)
-        gen_shapes = ([None, 3], [None, 3], [None], [None], [None])
+        gen_types = (tf.float32, tf.float32, tf.string, tf.int32, tf.int32, tf.int32)
+        gen_shapes = ([None, 3], [None, 3], [None], [None], [None], [None])
 
         return random_balanced_gen, gen_types, gen_shapes
 
     def get_tf_mapping(self, config):
 
-        def tf_map(stacked_partial, stacked_complete, categories, obj_inds, stacked_partial_lengths):
+        def tf_map(stacked_partial, stacked_complete, categories, obj_inds, stacked_partial_lengths,
+                   stacked_complete_lengths):
             """
             From the input point cloud, this function compute all the point clouds at each layer, the neighbors
             indices, the pooling indices and other useful variables.
@@ -379,6 +382,7 @@ class ShapeNetV1Dataset(Dataset):
             :param categories: Tensor with size [None] where None is the number of batch
             :param obj_inds: Tensor with size [None] where None is the number of batch
             :param stacked_partial_lengths: Tensor with size [None] where None is the number of batch
+            :param stacked_complete_lengths: Tensor with size [None] where None is the number of batch
             """
 
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
@@ -414,7 +418,7 @@ class ShapeNetV1Dataset(Dataset):
                                                    batch_inds)
 
             # Add scale and rotation for testing
-            input_list += [scales, rots, obj_inds]
+            input_list += [scales, rots, obj_inds, stacked_partial_lengths, stacked_complete_lengths]
 
             return input_list
 
