@@ -458,7 +458,7 @@ class ShapeNetV1Dataset(Dataset):
         # Generator types and shapes
         gen_types = (tf.float32, tf.float32, tf.string, tf.int32, tf.int32, tf.int32)
         gen_shapes = (
-            [None, config.num_input_points, 3], [None, config.num_gt_points, 3], [None], [None], [None], [None])
+            [self.batch_limit, config.num_input_points, 3], [self.batch_limit, config.num_gt_points, 3], [None], [None], [None], [None])
 
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
@@ -485,8 +485,8 @@ class ShapeNetV1Dataset(Dataset):
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
             batch_inds = self.tf_get_batch_inds(stacked_partial_lengths)
 
-            stacked_partial = tf.reshape(stacked_partial, [-1, 3])
-            stacked_complete = tf.reshape(stacked_complete, [-1, 3])
+            stacked_partial = tf.reshape(stacked_partial, [self.batch_limit, 3])
+            stacked_complete = tf.reshape(stacked_complete, [self.batch_limit, 3])
 
             # Augment input points
             # TODO: SHOULD I AUGMENT THE DATA?
