@@ -326,8 +326,11 @@ class Dataset:
         # Update network model in config from ds
         config.network_model = self.network_model
 
-        # Calibrate generators to batch_num
-        self.batch_limit = self.calibrate_batches(config)
+        # Calibrate generators to batch_num or use static batch limit
+        if config.per_cloud_batch:
+            self.batch_limit = 32
+        else:
+            self.batch_limit = self.calibrate_batches(config)
 
         # From config parameter, compute higher bound of neighbors number in a neighborhood
         hist_n = int(np.ceil(4 / 3 * np.pi * (config.density_parameter + 1) ** 3))
@@ -566,7 +569,6 @@ class Dataset:
                              stacked_points,
                              stacked_features,
                              stacked_complete,
-                             categories,
                              stacks_lengths,
                              batch_inds):
 
@@ -587,6 +589,10 @@ class Dataset:
         input_pools = []
         input_upsamples = []
         input_batches_len = []
+
+        # When using per cloud batch generator, points need to be reshaped
+        # if config.per_cloud_batch:
+        #     stacked_points = tf.reshape(stacked_points, [-1, 3])
 
         ######################
         # Loop over the blocks

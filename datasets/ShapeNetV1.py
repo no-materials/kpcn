@@ -269,7 +269,7 @@ class ShapeNetV1Dataset(Dataset):
         ################
         # Def generators
         ################
-        def random_balanced_gen():
+        def dynamic_batch_point_based_gen():
 
             # Initiate concatenation lists
             tpp_list = []  # partial points
@@ -360,15 +360,112 @@ class ShapeNetV1Dataset(Dataset):
                    np.array([tp.shape[0] for tp in tpp_list]),
                    np.array([tc.shape[0] for tc in tcp_list]))
 
+        def static_batch_cloud_based_gen():
+
+            # Initiate concatenation lists
+            tpp_list = []  # partial points
+            tcp_list = []  # complete points
+            tcat_list = []  # categories
+            ti_list = []  # cloud index
+            batch_n = 0
+
+            # Initiate parameters depending on the chosen split
+            if split == 'train':
+                if balanced:
+                    pick_n = int(np.ceil(self.num_train / self.num_classes))
+                    gen_indices = []
+                    for l in self.label_values:
+                        label_inds = np.where(np.equal(self.input_labels[split], l))[0]
+                        rand_inds = np.random.choice(label_inds, size=pick_n, replace=True)
+                        gen_indices += [rand_inds]
+                    gen_indices = np.random.permutation(np.hstack(gen_indices))
+                else:
+                    gen_indices = np.random.permutation(self.num_train)
+
+            elif split == 'valid':
+
+                # Get indices with the minimum potential
+                val_num = min(self.num_test, config.validation_size * config.batch_num)
+                if val_num < self.potentials[split].shape[0]:
+                    gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
+                else:
+                    gen_indices = np.random.permutation(val_num)
+
+                # Update potentials
+                self.potentials[split][gen_indices] += 1.0
+
+            elif split == 'test':
+
+                # Get indices with the minimum potential
+                val_num = min(self.num_test, config.validation_size * config.batch_num)
+                if val_num < self.potentials[split].shape[0]:
+                    gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
+                else:
+                    gen_indices = np.random.permutation(val_num)
+
+                # Update potentials
+                self.potentials[split][gen_indices] += 1.0
+
+            else:
+                raise ValueError('Wrong split argument in data generator: ' + split)
+
+            # Generator loop
+            for p_i in gen_indices:
+
+                # Re-sample partial & ground-truth clouds
+                new_partial_points = resample_cloud(self.partial_points[split][p_i], config.num_input_points) \
+                    .astype(np.float32)
+                new_complete_points = resample_cloud(self.complete_points[split][p_i], config.num_gt_points) \
+                    .astype(np.float32)
+
+                # Collect labels
+                input_category = self.categories[split][p_i]
+
+                # In case batch is full, yield it and reset it
+                if batch_n >= self.batch_limit and batch_n > 0:
+                    yield (np.array(tpp_list, dtype=np.float32),
+                           np.array(tcp_list, dtype=np.float32),
+                           np.array(tcat_list, dtype=np.unicode_),
+                           np.array(ti_list, dtype=np.int32),
+                           np.array([tp.shape[0] for tp in tpp_list]),
+                           np.array([tc.shape[0] for tc in tcp_list]))
+                    tpp_list = []
+                    tcp_list = []
+                    tcat_list = []
+                    ti_list = []
+                    batch_n = 0
+
+                # Add data to current batch
+                tpp_list += [new_partial_points]
+                tcp_list += [new_complete_points]
+                tcat_list += [input_category]
+                ti_list += [p_i]
+
+                # Update batch size
+                batch_n += 1
+
+            yield (np.array(tpp_list, dtype=np.float32),
+                   np.array(tcp_list, dtype=np.float32),
+                   np.array(tcat_list, dtype=np.unicode_),
+                   np.array(ti_list, dtype=np.int32),
+                   np.array([tp.shape[0] for tp in tpp_list]),
+                   np.array([tc.shape[0] for tc in tcp_list]))
+
         ##################
         # Return generator
         ##################
 
         # Generator types and shapes
         gen_types = (tf.float32, tf.float32, tf.string, tf.int32, tf.int32, tf.int32)
-        gen_shapes = ([None, 3], [None, 3], [None], [None], [None], [None])
+        gen_shapes = (
+            [None, config.num_input_points, 3], [None, config.num_gt_points, 3], [None], [None], [None], [None])
 
-        return random_balanced_gen, gen_types, gen_shapes
+        if config.per_cloud_batch:
+            used_gen = static_batch_cloud_based_gen
+        else:
+            used_gen = dynamic_batch_point_based_gen
+
+        return used_gen, gen_types, gen_shapes
 
     def get_tf_mapping(self, config):
 
@@ -388,6 +485,9 @@ class ShapeNetV1Dataset(Dataset):
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
             batch_inds = self.tf_get_batch_inds(stacked_partial_lengths)
 
+            stacked_partial = tf.reshape(stacked_partial, [-1, 3])
+            stacked_complete = tf.reshape(stacked_complete, [-1, 3])
+
             # Augment input points
             # TODO: SHOULD I AUGMENT THE DATA?
             stacked_points, scales, rots = self.tf_augment_input(stacked_partial,
@@ -395,12 +495,19 @@ class ShapeNetV1Dataset(Dataset):
                                                                  config)
 
             # First add a column of 1 as feature for the network to be able to learn 3D shapes
+            # if config.per_cloud_batch:
+            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], config.num_input_points, 1), dtype=tf.float32)
+            # else:
+            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
+
             stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
 
             # Then use positions or not
             if config.in_features_dim == 1:
                 pass
             elif config.in_features_dim == 4:
+                # stacked_features = tf.concat((stacked_features, stacked_points),
+                #                              axis=2 if config.per_cloud_batch else 1)
                 stacked_features = tf.concat((stacked_features, stacked_points), axis=1)
             elif config.in_features_dim == 7:
                 stacked_features = tf.concat((stacked_features, stacked_points, stacked_complete), axis=1)
@@ -408,12 +515,10 @@ class ShapeNetV1Dataset(Dataset):
                 raise ValueError('Only accepted input dimensions are 1, 4 and 7 (without and with XYZ)')
 
             # Get the whole input list
-            # TODO: Pass complete pc here...classification uses labels, I use complete pcs. Do I RLLY need to pass cats?
             input_list = self.tf_completion_inputs(config,
                                                    stacked_points,
                                                    stacked_features,
                                                    stacked_complete,
-                                                   categories,
                                                    stacked_partial_lengths,
                                                    batch_inds)
 
@@ -556,3 +661,11 @@ class ShapeNetV1Dataset(Dataset):
                 epoch += 1
 
         return
+
+
+def resample_cloud(cloud, n):
+    """Drop or duplicate points so that cloud has exactly n points"""
+    idx = np.random.permutation(cloud.shape[0])
+    if idx.shape[0] < n:
+        idx = np.concatenate([idx, np.random.randint(cloud.shape[0], size=n - cloud.shape[0])])
+    return cloud[idx[:n]]
