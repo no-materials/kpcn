@@ -599,7 +599,7 @@ def completion_head(features, config, dropout_prob):
                                          config.batch_norm_momentum,
                                          training))
     with tf.variable_scope('fc2'):
-        w = weight_variable([1024,  3])
+        w = weight_variable([1024, config.num_coarse * 3])
         features = leaky_relu(batch_norm(tf.matmul(features, w),
                                          config.use_batch_norm,
                                          config.batch_norm_momentum,
