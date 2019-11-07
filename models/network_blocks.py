@@ -617,7 +617,7 @@ def completion_loss(coarse, inputs, config, alpha, batch_average=False):
     # TODO: for compl sizes in.. subst config.num_coarse slice to get true coarsed gt and not a random 1024 points
     gt_ds = tf.reshape(inputs['complete_points'], [-1, config.num_coarse, 3])
     # print(gt_ds.shape)
-    loss_coarse = earth_mover(coarse, gt_ds)
+    loss_coarse = earth_mover(coarse, inputs['complete_points'])
 
     # loss_fine = chamfer(fine, gt)
     #
