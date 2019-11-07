@@ -156,7 +156,9 @@ class ApproxMatchGpuOp: public OpKernel{
 
 			const Tensor& xyz2_tensor=context->input(1);
 			std::cout << "-------------------------------" << b << std::endl;
+            std::cout << "-------------------------------" << xyz1_tensor.shape() << std::endl;
             std::cout << "-------------------------------" << xyz2_tensor.shape().dim_size(0) << std::endl;
+            std::cout << "-------------------------------" << xyz2_tensor.shape() << std::endl;
 
 			OP_REQUIRES(context,xyz2_tensor.dims()==3 && xyz2_tensor.shape().dim_size(2)==3 && xyz2_tensor.shape().dim_size(0)==b,errors::InvalidArgument("ApproxMatch expects (batch_size,num_points,3) xyz2 shape, and batch_size must match"));
 			int m=xyz2_tensor.shape().dim_size(1);
