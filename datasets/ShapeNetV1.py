@@ -485,8 +485,8 @@ class ShapeNetV1Dataset(Dataset):
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
             batch_inds = self.tf_get_batch_inds(stacked_partial_lengths)
 
-            stacked_partial = tf.reshape(stacked_partial, [-1, 3])
-            stacked_complete = tf.reshape(stacked_complete, [-1, 3])
+            # stacked_partial = tf.reshape(stacked_partial, [-1, 3])
+            # stacked_complete = tf.reshape(stacked_complete, [-1, 3])
 
             # Augment input points
             # TODO: SHOULD I AUGMENT THE DATA?
@@ -495,20 +495,20 @@ class ShapeNetV1Dataset(Dataset):
                                                                  config)
 
             # First add a column of 1 as feature for the network to be able to learn 3D shapes
-            # if config.per_cloud_batch:
-            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], config.num_input_points, 1), dtype=tf.float32)
-            # else:
-            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
+            if config.per_cloud_batch:
+                stacked_features = tf.ones((tf.shape(stacked_points)[0], config.num_input_points, 1), dtype=tf.float32)
+            else:
+                stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
 
-            stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
+            # stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
 
             # Then use positions or not
             if config.in_features_dim == 1:
                 pass
             elif config.in_features_dim == 4:
-                # stacked_features = tf.concat((stacked_features, stacked_points),
-                #                              axis=2 if config.per_cloud_batch else 1)
-                stacked_features = tf.concat((stacked_features, stacked_points), axis=1)
+                stacked_features = tf.concat((stacked_features, stacked_points),
+                                             axis=2 if config.per_cloud_batch else 1)
+                # stacked_features = tf.concat((stacked_features, stacked_points), axis=1)
             elif config.in_features_dim == 7:
                 stacked_features = tf.concat((stacked_features, stacked_points, stacked_complete), axis=1)
             else:

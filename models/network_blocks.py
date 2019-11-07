@@ -591,10 +591,6 @@ def completion_head(features, config, dropout_prob):
     # Boolean of training
     training = dropout_prob < 0.99
 
-    features = [tf.reduce_max(f, axis=1, keepdims=False)
-                for f in tf.split(features, 32, axis=1)]
-    features = tf.concat(features, axis=0)
-
     # Fully connected layer2
     with tf.variable_scope('fc1'):
         w = weight_variable([int(features.shape[1]), 1024])

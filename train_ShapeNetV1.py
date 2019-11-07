@@ -100,7 +100,7 @@ class ShapeNetV1Config(Config):
     num_gt_points = 16384
 
     # True if batch has clouds, not points, and also if we want static number of points in clouds as well as batches
-    per_cloud_batch = True
+    per_cloud_batch = False
 
     num_coarse = 1024
     grid_size = 4
