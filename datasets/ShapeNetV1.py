@@ -457,13 +457,16 @@ class ShapeNetV1Dataset(Dataset):
 
         # Generator types and shapes
         gen_types = (tf.float32, tf.float32, tf.string, tf.int32, tf.int32, tf.int32)
-        gen_shapes = (
-            [self.batch_limit, config.num_input_points, 3], [self.batch_limit, config.num_gt_points, 3], [None], [None], [None], [None])
 
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
+            gen_shapes = (
+                [self.batch_limit, config.num_input_points, 3], [self.batch_limit, config.num_gt_points, 3], [None],
+                [None], [None], [None])
         else:
             used_gen = dynamic_batch_point_based_gen
+            gen_shapes = (
+                [None, 3], [None, 3], [None], [None], [None], [None])
 
         return used_gen, gen_types, gen_shapes
 
