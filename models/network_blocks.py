@@ -591,6 +591,10 @@ def completion_head(features, config, dropout_prob):
     # Boolean of training
     training = dropout_prob < 0.99
 
+    features = [tf.reduce_max(f, axis=1, keepdims=False)
+                for f in tf.split(features, 32, axis=1)]
+    features = tf.concat(features, axis=0)
+
     # Fully connected layer2
     with tf.variable_scope('fc1'):
         w = weight_variable([int(features.shape[1]), 1024])
@@ -615,7 +619,8 @@ def completion_loss(coarse, inputs, config, alpha, batch_average=False):
     print(coarse.shape)
 
     # TODO: for compl sizes in.. subst config.num_coarse slice to get true coarsed gt and not a random 1024 points
-    gt_ds = tf.reshape(inputs['complete_points'], [32, config.num_coarse, 3])
+    gt_ds = tf.reshape(inputs['complete_points'], [32, config.num_gt_points, 3])
+    gt_ds = gt_ds[:, :config.num_coarse, :]
     print(gt_ds.shape)
     loss_coarse = earth_mover(coarse, gt_ds)
 
