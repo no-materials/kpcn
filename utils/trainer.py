@@ -152,7 +152,7 @@ class ModelTrainer:
         with tf.variable_scope('results'):
 
             gt_ds = tf.reshape(model.inputs['complete_points'], [-1, model.coarse.shape[1], 3])
-            self.coarse_earth_mover = earth_mover(model.coarse, gt_ds)
+            self.coarse_earth_mover = chamfer(model.coarse, gt_ds)
             self.coarse_chamfer = chamfer(model.coarse, gt_ds)
             # TODO: dont have 2 sep losses fine & coarse, but one mixed with alpha...
 
