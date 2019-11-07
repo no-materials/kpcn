@@ -485,8 +485,8 @@ class ShapeNetV1Dataset(Dataset):
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
             batch_inds = self.tf_get_batch_inds(stacked_partial_lengths)
 
-            stacked_partial = tf.reshape(stacked_partial, [self.batch_limit, 3])
-            stacked_complete = tf.reshape(stacked_complete, [self.batch_limit, 3])
+            stacked_partial = tf.reshape(stacked_partial, [-1, 3])
+            stacked_complete = tf.reshape(stacked_complete, [-1, 3])
 
             # Augment input points
             # TODO: SHOULD I AUGMENT THE DATA?
