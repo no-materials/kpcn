@@ -605,7 +605,7 @@ def completion_head(features, config, dropout_prob):
                                          config.batch_norm_momentum,
                                          training))
 
-    return tf.reshape(features, [32, config.num_coarse, 3])
+    return tf.reshape(features, [-1, config.num_coarse, 3])
 
 
 # TODO: change this to Chamfer Distance & EMD - add fine...foldingnet...
@@ -615,7 +615,7 @@ def completion_loss(coarse, inputs, config, alpha, batch_average=False):
     print(coarse.shape)
 
     # TODO: for compl sizes in.. subst config.num_coarse slice to get true coarsed gt and not a random 1024 points
-    gt_ds = tf.reshape(inputs['complete_points'], [32, config.num_gt_points, 3])
+    gt_ds = tf.reshape(inputs['complete_points'], [-1, config.num_gt_points, 3])
     gt_ds = gt_ds[:, :config.num_coarse, :]
     print(gt_ds.shape)
     loss_coarse = earth_mover(coarse, gt_ds)

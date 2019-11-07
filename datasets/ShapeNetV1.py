@@ -423,8 +423,8 @@ class ShapeNetV1Dataset(Dataset):
 
                 # In case batch is full, yield it and reset it
                 if batch_n >= self.batch_limit and batch_n > 0:
-                    yield (np.array(tpp_list, dtype=np.float32),
-                           np.array(tcp_list, dtype=np.float32),
+                    yield (np.concatenate(tpp_list, axis=0),
+                           np.concatenate(tcp_list, axis=0),
                            np.array(tcat_list, dtype=np.unicode_),
                            np.array(ti_list, dtype=np.int32),
                            np.array([tp.shape[0] for tp in tpp_list]),
@@ -444,8 +444,8 @@ class ShapeNetV1Dataset(Dataset):
                 # Update batch size
                 batch_n += 1
 
-            yield (np.array(tpp_list, dtype=np.float32),
-                   np.array(tcp_list, dtype=np.float32),
+            yield (np.concatenate(tpp_list, axis=0),
+                   np.concatenate(tcp_list, axis=0),
                    np.array(tcat_list, dtype=np.unicode_),
                    np.array(ti_list, dtype=np.int32),
                    np.array([tp.shape[0] for tp in tpp_list]),
@@ -461,8 +461,7 @@ class ShapeNetV1Dataset(Dataset):
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
             gen_shapes = (
-                [self.batch_limit, config.num_input_points, 3], [self.batch_limit, config.num_gt_points, 3], [None],
-                [None], [None], [None])
+                [None, 3], [None, 3], [None], [None], [None], [None])
         else:
             used_gen = dynamic_batch_point_based_gen
             gen_shapes = (
@@ -488,9 +487,6 @@ class ShapeNetV1Dataset(Dataset):
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
             batch_inds = self.tf_get_batch_inds(stacked_partial_lengths)
 
-            # stacked_partial = tf.reshape(stacked_partial, [-1, 3])
-            # stacked_complete = tf.reshape(stacked_complete, [-1, 3])
-
             # Augment input points
             # TODO: SHOULD I AUGMENT THE DATA?
             stacked_points, scales, rots = self.tf_augment_input(stacked_partial,
@@ -498,20 +494,20 @@ class ShapeNetV1Dataset(Dataset):
                                                                  config)
 
             # First add a column of 1 as feature for the network to be able to learn 3D shapes
-            if config.per_cloud_batch:
-                stacked_features = tf.ones((tf.shape(stacked_points)[0], config.num_input_points, 1), dtype=tf.float32)
-            else:
-                stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
+            # if config.per_cloud_batch:
+            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], config.num_input_points, 1), dtype=tf.float32)
+            # else:
+            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
 
-            # stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
+            stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
 
             # Then use positions or not
             if config.in_features_dim == 1:
                 pass
             elif config.in_features_dim == 4:
-                stacked_features = tf.concat((stacked_features, stacked_points),
-                                             axis=2 if config.per_cloud_batch else 1)
-                # stacked_features = tf.concat((stacked_features, stacked_points), axis=1)
+                # stacked_features = tf.concat((stacked_features, stacked_points),
+                #                              axis=2 if config.per_cloud_batch else 1)
+                stacked_features = tf.concat((stacked_features, stacked_points), axis=1)
             elif config.in_features_dim == 7:
                 stacked_features = tf.concat((stacked_features, stacked_points, stacked_complete), axis=1)
             else:
