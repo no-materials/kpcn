@@ -392,6 +392,32 @@ def nearest_upsample_block(layer_ind, inputs, features, radius, fdim, config, tr
     return upsampled_features
 
 
+def global_average_block(layer_ind, inputs, features, radius, fdim, config, training):
+    """
+    Block performing a global average over batch pooling
+    """
+
+    # Average pooling to aggregate feature in the end
+    with tf.variable_scope('average_pooling'):
+        # Get the number of features
+        N = tf.shape(features)[0]
+
+        # Add a last zero features for shadow batch inds
+        features = tf.concat([features, tf.zeros((1, int(features.shape[1])), features.dtype)], axis=0)
+
+        # Collect each batch features
+        batch_features = tf.gather(features, inputs['out_batches'], axis=0)
+
+        # Average features in each batch
+        batch_features = tf.reduce_sum(batch_features, axis=1)
+        # batch_num = tf.reduce_sum(tf.cast(inputs['out_batches'] >= 0, tf.float32), axis=1, keep_dims=True)
+        batch_num = tf.reduce_sum(tf.cast(inputs['out_batches'] < N, tf.float32), axis=1, keep_dims=True)
+
+        features = batch_features / batch_num
+
+    return features
+
+
 def get_block_ops(block_name):
     if block_name == 'unary':
         return unary_block
@@ -457,7 +483,7 @@ def get_block_ops(block_name):
 #       \*******************/
 #
 
-def assemble_CNN_blocks(inputs, config, dropout_prob):
+def assemble_encoder_blocks(inputs, config, dropout_prob):
     """
     Definition of all the layers according to config
     This assembles the 'encoder' part of the KFCNN of KPCONV paper
@@ -524,19 +550,7 @@ def assemble_CNN_blocks(inputs, config, dropout_prob):
     return F
 
 
-def assemble_KPCN_blocks(inputs, config, dropout_prob):
-    """
-    Definition of all the layers according to config
-    :param inputs: dictionary of inputs with keys [points, neighbors, pools, upsamples, features, batches, labels]
-    :param config:
-    :param dropout_prob:
-    :return:
-    """
-
-    # First get features from CNN
-    F = assemble_CNN_blocks(inputs, config, dropout_prob)
-    features = F[-1]
-
+def assemble_decoder_blocks(inputs, config, dropout_prob, features, F):
     # Current radius of convolution and feature dimension
     layer = config.num_layers - 1
     r = config.first_subsampling_dl * config.density_parameter * 2 ** layer
@@ -587,9 +601,30 @@ def assemble_KPCN_blocks(inputs, config, dropout_prob):
     return features
 
 
+def assemble_architecture(inputs, config, dropout_prob):
+    """
+    Definition of all the layers according to config
+    :param inputs: dictionary of inputs with keys [points, neighbors, pools, upsamples, features, batches, labels]
+    :param config:
+    :param dropout_prob:
+    :return:
+    """
+
+    # First get features from encoder
+    encoder_features = assemble_encoder_blocks(inputs, config, dropout_prob)
+
+    bottleneck_features = encoder_features[-1]
+
+    # return assemble_decoder_blocks(inputs, config, dropout_prob, bottleneck_features, encoder_features)
+
+    return bottleneck_features
+
+
 def completion_head(features, config, dropout_prob):
     # Boolean of training
     training = dropout_prob < 0.99
+
+    print(features.shape)
 
     # Fully connected layer2
     with tf.variable_scope('fc1'):
@@ -604,6 +639,11 @@ def completion_head(features, config, dropout_prob):
                                          config.use_batch_norm,
                                          config.batch_norm_momentum,
                                          training))
+
+    # features = tf.reshape(features, [-1, config.num_input_points, config.num_coarse * 3])
+
+    # features = [tf.reduce_max(f, axis=1, keepdims=keepdims)
+    #             for f in tf.split(features,, axis = 1)]
 
     return tf.reshape(features, [-1, config.num_coarse, 3])
 

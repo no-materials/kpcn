@@ -55,6 +55,7 @@ class ShapeNetV1Config(Config):
                     'resnetb_deformable',
                     'resnetb_deformable_strided',
                     'resnetb_deformable',
+                    'global_average',
                     'nearest_upsample',
                     'unary',
                     'nearest_upsample',

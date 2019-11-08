@@ -13,7 +13,7 @@ import tensorflow as tf
 import sys
 
 # Convolution functions
-from models.network_blocks import assemble_KPCN_blocks,  completion_head
+from models.network_blocks import assemble_encoder_blocks, assemble_architecture, completion_head
 
 from models.network_blocks import completion_loss
 
@@ -90,9 +90,9 @@ class KernelPointCompletionNetwork:
 
         # Create layers
         with tf.variable_scope('KernelPointNetwork'):
-            output_features = assemble_KPCN_blocks(self.inputs,
-                                                   self.config,
-                                                   self.dropout_prob)
+            output_features = assemble_architecture(self.inputs,
+                                                      self.config,
+                                                      self.dropout_prob)
 
             self.coarse = completion_head(output_features,
                                           self.config,
