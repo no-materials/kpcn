@@ -628,6 +628,7 @@ def completion_head(features, config, dropout_prob):
     training = dropout_prob < 0.99
 
     print(features.shape)
+    features = tf.reshape(features, [123,2,24])
 
     # Fully connected layer2
     with tf.variable_scope('fc1'):
