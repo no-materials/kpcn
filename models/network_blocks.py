@@ -415,6 +415,9 @@ def global_average_block(layer_ind, inputs, features, radius, fdim, config, trai
 
         features = batch_features / batch_num
 
+    print("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+    print(features.shape)
+
     return features
 
 
