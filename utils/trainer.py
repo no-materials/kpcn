@@ -147,8 +147,7 @@ class ModelTrainer:
         # Result ops
         ############
 
-        # Add the Op to compare the logits to the labels during evaluation.
-        # TODO: change this after integrating pcn losses
+        # Add the Op to compare the distances to the gt during evaluation.
         with tf.variable_scope('results'):
 
             gt_ds = tf.reshape(model.inputs['complete_points'], [-1, model.config.num_gt_points, 3])
@@ -274,7 +273,8 @@ class ModelTrainer:
                 if model.config.saving and not exists(join(model.saving_path, 'running_PID.txt')):
                     break
 
-                if model.config.dataset.startswith('ShapeNetPart') or model.config.dataset.startswith('ModelNet'):
+                if model.config.dataset.startswith('ShapeNetPart') or model.config.dataset.startswith(
+                        'ModelNet') or model.config.dataset.startswith('ShapeNetV1'):
                     if model.config.epoch_steps and epoch_n > model.config.epoch_steps:
                         raise tf.errors.OutOfRangeError(None, None, '')
 
@@ -393,7 +393,6 @@ class ModelTrainer:
                 # Run one step of the model.
                 t = [time.time()]
                 ops = (self.coarse_earth_mover, self.coarse_chamfer, model.inputs['object_inds'])
-                # TODO: dropout here is not used in the arch...check if this has side-effects
                 coarse_em, coarse_cd, inds = self.sess.run(ops, {model.dropout_prob: 1.0})
                 t += [time.time()]
 
@@ -422,6 +421,7 @@ class ModelTrainer:
         coarse_cd_mean = np.mean(coarse_cd_list)
         print('Validation distances\nMean Chamfer: {:4.2f}\tMean Earth Mover: {:4.2f}'.format(coarse_cd_mean,
                                                                                               coarse_em_mean))
+        # TODO: append validation mean distances to validation.txt file in resulsts dir
 
     # Saving methods
     # ------------------------------------------------------------------------------------------------------------------

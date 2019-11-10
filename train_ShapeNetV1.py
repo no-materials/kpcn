@@ -99,7 +99,7 @@ class ShapeNetV1Config(Config):
     # all complete clouds will be re-sampled to this hardcoded number
     num_gt_points = 16384
 
-    # True if batch has clouds, not points, and also if we want static number of points in clouds as well as batches
+    # True if we want static number of points in clouds as well as batches
     per_cloud_batch = True
 
     num_coarse = 1024
@@ -134,7 +134,7 @@ class ShapeNetV1Config(Config):
     validation_size = 50
 
     # Number of epoch between each snapshot
-    snapshot_gap = 50
+    snapshot_gap = 15
 
     # Augmentations
     augment_scale_anisotropic = True

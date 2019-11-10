@@ -45,6 +45,19 @@ class Config:
     use_batch_norm = True
     batch_norm_momentum = 0.99
 
+    # all partial clouds will be re-sampled to this hardcoded number
+    num_input_points = 3000
+    # all complete clouds will be re-sampled to this hardcoded number
+    num_gt_points = 16384
+
+    # True if we want static number of points in clouds as well as batches
+    per_cloud_batch = True
+
+    num_coarse = 1024
+    grid_size = 4
+    grid_scale = 0.05
+    num_fine = grid_size ** 2 * num_coarse
+
     # For segmentation models : ratio between the segmented area and the input area
     segmentation_ratio = 1.0
 
@@ -94,6 +107,10 @@ class Config:
 
     # Learning rate decays. Dictionary of all decay values with their epoch {epoch: decay}.
     lr_decays = {200: 0.2, 300: .2}
+
+    # Hyperparameter alpha for distance loss weighting
+    alphas = [0.01, 0.1, 0.5, 1.0]
+    alpha_epoch = [1, 10000, 20000, 50000]
 
     # Gradient clipping value (negative means no clipping)
     grad_clip_norm = 100.0
@@ -177,6 +194,12 @@ class Config:
                 elif line_info[0] == 'augment_symmetries':
                     self.augment_symmetries = [bool(int(b)) for b in line_info[2:]]
 
+                elif line_info[0] == 'alphas':
+                    self.alphas = [float(a) for a in line_info[2:]]
+
+                elif line_info[0] == 'alpha_epoch':
+                    self.alpha_epoch = [int(a) for a in line_info[2:]]
+
                 elif line_info[0] == 'num_categories':
                     if len(line_info) > 3:
                         self.num_categories = [int(c) for c in line_info[2:]]
@@ -231,6 +254,14 @@ class Config:
             text_file.write('first_features_dim = {:d}\n'.format(self.first_features_dim))
             text_file.write('use_batch_norm = {:d}\n'.format(int(self.use_batch_norm)))
             text_file.write('batch_norm_momentum = {:.3f}\n\n'.format(self.batch_norm_momentum))
+            text_file.write('num_input_points = {:d}\n'.format(self.num_input_points))
+            text_file.write('num_gt_points = {:d}\n'.format(self.num_gt_points))
+            text_file.write('per_cloud_batch = {:d}\n'.format(self.per_cloud_batch))
+            text_file.write('num_coarse = {:d}\n'.format(self.num_coarse))
+            text_file.write('grid_size = {:d}\n'.format(self.grid_size))
+            text_file.write('grid_scale = {:.3f}\n'.format(self.grid_scale))
+            text_file.write('num_fine = {:d}\n\n'.format(self.num_fine))
+
             text_file.write('segmentation_ratio = {:.3f}\n\n'.format(self.segmentation_ratio))
 
             # KPConv parameters
@@ -258,6 +289,15 @@ class Config:
                 text_file.write(' {:d}:{:f}'.format(e, d))
             text_file.write('\n')
             text_file.write('grad_clip_norm = {:f}\n\n'.format(self.grad_clip_norm))
+
+            text_file.write('alphas =')
+            for a in self.alphas:
+                text_file.write(' {:f}'.format(a))
+            text_file.write('\n')
+            text_file.write('alpha_epoch =')
+            for a in self.alpha_epoch:
+                text_file.write(' {:d}'.format(a))
+            text_file.write('\n\n')
 
             text_file.write('augment_symmetries =')
             for a in self.augment_symmetries:
