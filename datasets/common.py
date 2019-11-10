@@ -328,7 +328,7 @@ class Dataset:
 
         # Calibrate generators to batch_num or use static batch limit
         if config.per_cloud_batch:
-            self.batch_limit = 32
+            self.batch_limit = config.batch_num
         else:
             self.batch_limit = self.calibrate_batches(config)
 

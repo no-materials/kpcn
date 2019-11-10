@@ -90,11 +90,11 @@ class KernelPointCompletionNetwork:
 
         # Create layers
         with tf.variable_scope('KernelPointNetwork'):
-            output_features = assemble_architecture(self.inputs,
-                                                      self.config,
-                                                      self.dropout_prob)
+            self.bottleneck_features = assemble_architecture(self.inputs,
+                                                             self.config,
+                                                             self.dropout_prob)
 
-            self.coarse = completion_head(output_features,
+            self.coarse = completion_head(self.bottleneck_features,
                                           self.config,
                                           self.dropout_prob)
 

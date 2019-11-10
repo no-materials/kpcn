@@ -125,7 +125,7 @@ class ShapeNetV1Config(Config):
     grad_clip_norm = 100.0
 
     # Number of batch
-    batch_num = 16
+    batch_num = 32
 
     # Number of steps per epochs (cannot be None for this dataset)
     epoch_steps = None
@@ -197,7 +197,7 @@ if __name__ == '__main__':
     dataset.init_input_pipeline(config)
 
     # Test the input pipeline alone with this debug function
-    # dataset.check_input_pipeline_timing(config)
+    # dataset.check_input_pipeline_timing(config, model)
     # dataset.check_input_pipeline_neighbors(config)
 
     ##############

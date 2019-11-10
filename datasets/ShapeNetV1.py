@@ -531,7 +531,7 @@ class ShapeNetV1Dataset(Dataset):
     # Debug methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def check_input_pipeline_timing(self, config):
+    def check_input_pipeline_timing(self, config, model):
 
         # Create a session for running Ops on the Graph.
         cProto = tf.ConfigProto()
@@ -556,16 +556,16 @@ class ShapeNetV1Dataset(Dataset):
             try:
                 # Run one step of the model.
                 t = [time.time()]
-                ops = self.flat_inputs
+                ops = [self.flat_inputs, model.coarse, model.bottleneck_features]
 
                 # Get next inputs
-                np_flat_inputs = self.sess.run(ops)
+                np_flat_inputs, coarse, output_features = self.sess.run(ops, {model.dropout_prob: 0.5})
                 t += [time.time()]
 
                 # Restructure flatten inputs
                 points = np_flat_inputs[:config.num_layers]
                 neighbors = np_flat_inputs[config.num_layers:2 * config.num_layers]
-                batches = np_flat_inputs[-6]
+                batches = np_flat_inputs[-7]
                 n_b = 0.99 * n_b + 0.01 * batches.shape[0]
                 t += [time.time()]
 

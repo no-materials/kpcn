@@ -415,9 +415,6 @@ def global_average_block(layer_ind, inputs, features, radius, fdim, config, trai
 
         features = batch_features / batch_num
 
-    print("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
-    print(features.shape)
-
     return features
 
 
@@ -550,6 +547,26 @@ def assemble_encoder_blocks(inputs, config, dropout_prob):
             # Save this layer features
             F += [features]
 
+    # Average pooling to aggregate feature in the end
+    with tf.variable_scope('average_pooling'):
+        # Get the number of features
+        N = tf.shape(features)[0]
+
+        # Add a last zero features for shadow batch inds
+        features = tf.concat([features, tf.zeros((1, int(features.shape[1])), features.dtype)], axis=0)
+
+        # Collect each batch features
+        batch_features = tf.gather(features, inputs['out_batches'], axis=0)
+
+        # Average features in each batch
+        batch_features = tf.reduce_sum(batch_features, axis=1)
+        # batch_num = tf.reduce_sum(tf.cast(inputs['out_batches'] >= 0, tf.float32), axis=1, keep_dims=True)
+        batch_num = tf.reduce_sum(tf.cast(inputs['out_batches'] < N, tf.float32), axis=1, keep_dims=True)
+
+        features = batch_features / batch_num
+
+        F += [features]
+
     return F
 
 
@@ -627,9 +644,6 @@ def completion_head(features, config, dropout_prob):
     # Boolean of training
     training = dropout_prob < 0.99
 
-    print(features.shape)
-    features = tf.reshape(features, [123,2,24])
-
     # Fully connected layer2
     with tf.variable_scope('fc1'):
         w = weight_variable([int(features.shape[1]), 1024])
@@ -644,24 +658,14 @@ def completion_head(features, config, dropout_prob):
                                          config.batch_norm_momentum,
                                          training))
 
-    # features = tf.reshape(features, [-1, config.num_input_points, config.num_coarse * 3])
-
-    # features = [tf.reduce_max(f, axis=1, keepdims=keepdims)
-    #             for f in tf.split(features,, axis = 1)]
-
     return tf.reshape(features, [-1, config.num_coarse, 3])
 
 
 # TODO: change this to Chamfer Distance & EMD - add fine...foldingnet...
 # TODO: add dynamic alpha tf variable
 def completion_loss(coarse, inputs, config, alpha, batch_average=False):
-    print(inputs['complete_points'].shape)
-    print(coarse.shape)
-
-    # TODO: for compl sizes in.. subst config.num_coarse slice to get true coarsed gt and not a random 1024 points
     gt_ds = tf.reshape(inputs['complete_points'], [-1, config.num_gt_points, 3])
     gt_ds = gt_ds[:, :config.num_coarse, :]
-    print(gt_ds.shape)
     loss_coarse = earth_mover(coarse, gt_ds)
 
     # loss_fine = chamfer(fine, gt)
