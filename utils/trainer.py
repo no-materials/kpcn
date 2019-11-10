@@ -27,7 +27,6 @@ from utils.ply import read_ply, write_ply
 
 # Metrics
 from utils.metrics import IoU_from_confusions, chamfer, earth_mover
-from sklearn.metrics import confusion_matrix
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -244,7 +243,7 @@ class ModelTrainer:
                 # Console display (only one per second)
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
-                    message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.2f} Coarse_CD={:4.2f} ' \
+                    message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Coarse_CD={:4.3f} ' \
                               '---{:8.2f} ms/batch (Averaged)'
                     print(message.format(self.training_step,
                                          L_out,
@@ -259,7 +258,7 @@ class ModelTrainer:
                 if model.config.saving:
                     process = psutil.Process(os.getpid())
                     with open(join(model.saving_path, 'training.txt'), "a") as file:
-                        message = '{:d} {:.3f} {:.3f} {:.3f} {:.2f} {:.2f} {:.2f} {:.1f}\n'
+                        message = '{:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.2f} {:.1f}\n'
                         file.write(message.format(self.training_step,
                                                   L_out,
                                                   L_reg,
@@ -419,9 +418,24 @@ class ModelTrainer:
 
         coarse_em_mean = np.mean(coarse_em_list)
         coarse_cd_mean = np.mean(coarse_cd_list)
-        print('Validation distances\nMean Chamfer: {:4.2f}\tMean Earth Mover: {:4.2f}'.format(coarse_cd_mean,
+        print('Validation distances\nMean Chamfer: {:4.3f}\tMean Earth Mover: {:4.3f}'.format(coarse_cd_mean,
                                                                                               coarse_em_mean))
-        # TODO: append validation mean distances to validation.txt file in resulsts dir
+
+        if model.config.saving:
+            # Validation log file
+            if not exists(join(model.saving_path, 'validation.txt')):
+                with open(join(model.saving_path, 'validation.txt'), "w") as file:
+                    file.write('Steps mean_coarse_EM mean_coarse_CD\n')
+                    message = '{:d} {:.3f} {:.3f}\n'
+                    file.write(message.format(self.training_step,
+                                              coarse_em_mean,
+                                              coarse_cd_mean))
+            else:
+                with open(join(model.saving_path, 'validation.txt'), "a") as file:
+                    message = '{:d} {:.3f} {:.3f}\n'
+                    file.write(message.format(self.training_step,
+                                              coarse_em_mean,
+                                              coarse_cd_mean))
 
     # Saving methods
     # ------------------------------------------------------------------------------------------------------------------
