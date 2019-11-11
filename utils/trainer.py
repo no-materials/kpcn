@@ -198,6 +198,7 @@ class ModelTrainer:
         epoch_n = 1
         mean_epoch_n = 0
 
+        # TODO: remove, was for debug
         self.completion_validation_error(model, dataset)
 
         # Initialise iterator with train data
@@ -455,6 +456,9 @@ class ModelTrainer:
                 plot_path = join(model.saving_path, 'visu',
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
+                print('woooooooo')
+                print(pcs)
+                print(pcs[0])
                 self.plot_pc_three_views(plot_path, pcs, visualize_titles)
 
     # Saving methods
