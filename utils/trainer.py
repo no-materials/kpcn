@@ -450,10 +450,7 @@ class ModelTrainer:
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))
 
-            all_pcs = []
-            all_pcs += [partial_points_list]
-            all_pcs += [coarse_list]
-            all_pcs += [complete_points_list]
+            all_pcs = [partial_points_list, coarse_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'ground truth']
             for i in range(0, len(coarse_list), 5):
                 plot_path = join(model.saving_path, 'visu',
