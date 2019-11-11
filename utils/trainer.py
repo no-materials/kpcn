@@ -450,13 +450,18 @@ class ModelTrainer:
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))
 
-            print(partial_points_list)
-            all_pcs = [partial_points_list, coarse_list, complete_points_list]
+            all_pcs = []
+            all_pcs.append(partial_points_list)
+            all_pcs.append(coarse_list)
+            all_pcs.append(complete_points_list)
+            print(all_pcs)
             visualize_titles = ['input', 'coarse output', 'ground truth']
             for i in range(0, len(coarse_list), 5):
                 plot_path = join(model.saving_path, 'visu',
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
+                print('ahoy******************')
+                print(pcs)
                 self.plot_pc_three_views(plot_path, pcs, visualize_titles)
 
     # Saving methods
