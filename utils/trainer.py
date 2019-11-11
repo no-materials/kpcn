@@ -21,6 +21,7 @@ from os.path import exists, join
 import time
 import psutil
 import sys
+from matplotlib import pyplot as plt
 
 # PLY reader
 from utils.ply import read_ply, write_ply
@@ -196,6 +197,8 @@ class ModelTrainer:
         self.training_labels = np.zeros(0)
         epoch_n = 1
         mean_epoch_n = 0
+
+        self.completion_validation_error(model, dataset)
 
         # Initialise iterator with train data
         self.sess.run(dataset.train_init_op)
@@ -382,7 +385,9 @@ class ModelTrainer:
 
         coarse_em_list = []
         coarse_cd_list = []
-        # complete_points_list = []
+        coarse_list = []
+        complete_points_list = []
+        partial_points_list = []
         obj_inds = []
 
         mean_dt = np.zeros(2)
@@ -391,14 +396,17 @@ class ModelTrainer:
             try:
                 # Run one step of the model.
                 t = [time.time()]
-                ops = (self.coarse_earth_mover, self.coarse_chamfer, model.inputs['object_inds'])
-                coarse_em, coarse_cd, inds = self.sess.run(ops, {model.dropout_prob: 1.0})
+                ops = (self.coarse_earth_mover, self.coarse_chamfer, model.coarse, model.complete_points,
+                       model.inputs['points'], model.inputs['object_inds'])
+                coarse_em, coarse_cd, coarse, complete, partial, inds = self.sess.run(ops, {model.dropout_prob: 1.0})
                 t += [time.time()]
 
                 # Get distances and obj_indexes
                 coarse_em_list += [coarse_em]
                 coarse_cd_list += [coarse_cd]
-                # complete_points_list += [complete_points]
+                coarse_list += [coarse]
+                complete_points_list += [complete]
+                partial_points_list += [partial]
                 obj_inds += [inds]
 
                 # Average timing
@@ -436,6 +444,18 @@ class ModelTrainer:
                     file.write(message.format(self.training_step,
                                               coarse_em_mean,
                                               coarse_cd_mean))
+
+            # TODO: implement validation visu
+            if not exists(join(model.saving_path, 'visu')):
+                makedirs(join(model.saving_path, 'visu'))
+
+            all_pcs = [partial_points_list, coarse_list, complete_points_list]
+            visualize_titles = ['input', 'coarse output', 'ground truth']
+            for i in range(0, len(coarse_list), 5):
+                plot_path = join(model.saving_path, 'visu',
+                                 'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
+                pcs = [x[i] for x in all_pcs]
+                self.plot_pc_three_views(plot_path, pcs, visualize_titles)
 
     # Saving methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -495,3 +515,30 @@ class ModelTrainer:
                 np_name = '_'.join(v.name[:-2].split('/')[1:-1]) + '.npy'
                 np_file = join(kernels_dir, np_name)
                 np.save(np_file, kernel_weights)
+
+    # Visualisation methods
+    # ------------------------------------------------------------------------------------------------------------------
+
+    @staticmethod
+    def plot_pc_three_views(filename, pcs, titles, suptitle='', sizes=None, cmap='Reds', zdir='y',
+                            xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
+        if sizes is None:
+            sizes = [0.5 for i in range(len(pcs))]
+        fig = plt.figure(figsize=(len(pcs) * 3, 9))
+        for i in range(3):
+            elev = 30
+            azim = -45 + 90 * i
+            for j, (pc, size) in enumerate(zip(pcs, sizes)):
+                color = pc[:, 0]
+                ax = fig.add_subplot(3, len(pcs), i * len(pcs) + j + 1, projection='3d')
+                ax.view_init(elev, azim)
+                ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], zdir=zdir, c=color, s=size, cmap=cmap, vmin=-1, vmax=0.5)
+                ax.set_title(titles[j])
+                ax.set_axis_off()
+                ax.set_xlim(xlim)
+                ax.set_ylim(ylim)
+                ax.set_zlim(zlim)
+        plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.9, wspace=0.1, hspace=0.1)
+        plt.suptitle(suptitle)
+        fig.savefig(filename)
+        plt.close(fig)
