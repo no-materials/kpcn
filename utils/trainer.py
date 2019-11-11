@@ -533,6 +533,7 @@ class ModelTrainer:
             elev = 30
             azim = -45 + 90 * i
             for j, (pc, size) in enumerate(zip(pcs, sizes)):
+                pc = np.array(pc)
                 print(pc)
                 print(pc.shape)
                 color = pc[:, 0]
