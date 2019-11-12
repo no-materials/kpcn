@@ -22,6 +22,7 @@ import time
 import psutil
 import sys
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # PLY reader
 from utils.ply import read_ply, write_ply
