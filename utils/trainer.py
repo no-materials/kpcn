@@ -456,9 +456,9 @@ class ModelTrainer:
                 plot_path = join(model.saving_path, 'visu',
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
-                partial_temp = pcs[0][0][:3000, :]
-                coarse_temp = pcs[0, :, :]
-                complete_temp = pcs[:16384, :]
+                partial_temp = pcs[0][0][:3000, :]  # TODO: fix hardcoded cloud sizes - use config values
+                coarse_temp = pcs[1][0, :, :]
+                complete_temp = pcs[2][:16384, :]
                 final_pcs = [partial_temp, coarse_temp, complete_temp]
                 self.plot_pc_three_views(plot_path, final_pcs, visualize_titles)
 
