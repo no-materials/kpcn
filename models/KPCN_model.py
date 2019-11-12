@@ -39,7 +39,8 @@ class KernelPointCompletionNetwork:
         # Path of the result folder
         if self.config.saving:
             if self.config.saving_path is None:
-                self.saving_path = time.strftime('results/Log_%Y-%m-%d_%H-%M-%S', time.gmtime())
+                self.saving_path = time.strftime('/content/drive/My\ Drive/kpcn/results/Log_%Y-%m-%d_%H-%M-%S',
+                                                 time.gmtime())
             else:
                 self.saving_path = self.config.saving_path
             if not exists(self.saving_path):
