@@ -450,19 +450,17 @@ class ModelTrainer:
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))
 
-            all_pcs = []
-            all_pcs.append(partial_points_list)
-            all_pcs.append(coarse_list)
-            all_pcs.append(complete_points_list)
-            print(all_pcs)
+            all_pcs = [partial_points_list, coarse_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'ground truth']
             for i in range(0, len(coarse_list), 5):
                 plot_path = join(model.saving_path, 'visu',
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
-                print('ahoy******************')
-                print(pcs)
-                self.plot_pc_three_views(plot_path, pcs, visualize_titles)
+                partial_temp = pcs[0][0][:3000, :]
+                coarse_temp = pcs[0, :, :]
+                complete_temp = pcs[:16384, :]
+                final_pcs = [partial_temp, coarse_temp, complete_temp]
+                self.plot_pc_three_views(plot_path, final_pcs, visualize_titles)
 
     # Saving methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -536,9 +534,6 @@ class ModelTrainer:
             elev = 30
             azim = -45 + 90 * i
             for j, (pc, size) in enumerate(zip(pcs, sizes)):
-                pc = np.array(pc)
-                print(pc)
-                print(pc.shape)
                 color = pc[:, 0]
                 ax = fig.add_subplot(3, len(pcs), i * len(pcs) + j + 1, projection='3d')
                 ax.view_init(elev, azim)
