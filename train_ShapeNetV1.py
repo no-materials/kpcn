@@ -134,7 +134,7 @@ class ShapeNetV1Config(Config):
     validation_size = 50
 
     # Number of epoch between each snapshot
-    snapshot_gap = 15
+    snapshot_gap = 5
 
     # Augmentations
     augment_scale_anisotropic = True

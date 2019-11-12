@@ -152,10 +152,12 @@ class ModelTrainer:
         with tf.variable_scope('results'):
 
             gt_ds = tf.reshape(model.inputs['complete_points'], [-1, model.config.num_gt_points, 3])
-            gt_ds = gt_ds[:, :model.config.num_coarse, :]
-            self.coarse_earth_mover = earth_mover(model.coarse, gt_ds)
-            self.coarse_chamfer = chamfer(model.coarse, gt_ds)
-            # TODO: dont have 2 sep losses fine & coarse, but one mixed with alpha...
+            gt_ds_trunc = gt_ds[:, :model.config.num_coarse, :]
+
+            self.coarse_earth_mover = earth_mover(model.coarse, gt_ds_trunc)
+            self.fine_chamfer = chamfer(model.fine, gt_ds)
+
+            self.mixed_loss = self.coarse_earth_mover + model.alpha * self.fine_chamfer
 
         return
 
@@ -181,7 +183,7 @@ class ModelTrainer:
         if model.config.saving:
             # Training log file
             with open(join(model.saving_path, 'training.txt'), "w") as file:
-                file.write('Steps out_loss reg_loss point_loss coarse_EM coarse_CD time memory\n')
+                file.write('Steps out_loss reg_loss point_loss coarse_EM fine_CD mixed_loss time memory\n')
 
             # Killing file (simply delete this file when you want to stop the training)
             if not exists(join(model.saving_path, 'running_PID.txt')):
@@ -214,13 +216,14 @@ class ModelTrainer:
                        model.coarse,
                        model.complete_points,
                        self.coarse_earth_mover,
-                       self.coarse_chamfer]
+                       self.fine_chamfer,
+                       self.mixed_loss]
 
                 # If NaN appears in a training, use this debug block
                 if debug_NaN:
                     all_values = self.sess.run(ops + [self.check_op] + list(dataset.flat_inputs),
                                                {model.dropout_prob: 0.5})
-                    L_out, L_reg, L_p, coarse, complete, coarse_em, coarse_cd = all_values[1:7]
+                    L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss = all_values[1:7]
                     if np.isnan(L_reg) or np.isnan(L_out):
                         input_values = all_values[8:]
                         self.debug_nan(model, input_values, coarse)
@@ -228,7 +231,7 @@ class ModelTrainer:
 
                 else:
                     # Run normal
-                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, coarse_cd = self.sess.run(ops, {
+                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss = self.sess.run(ops, {
                         model.dropout_prob: 0.5})
 
                 t += [time.time()]
@@ -245,14 +248,15 @@ class ModelTrainer:
                 # Console display (only one per second)
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
-                    message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Coarse_CD={:4.3f} ' \
-                              '---{:8.2f} ms/batch (Averaged)'
+                    message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Fine_CD={:4.3f} ' \
+                              'Mixed_Loss={:4.3f} ---{:8.2f} ms/batch (Averaged)'
                     print(message.format(self.training_step,
                                          L_out,
                                          L_reg,
                                          L_p,
                                          coarse_em,
-                                         coarse_cd,
+                                         fine_cd,
+                                         mixed_loss,
                                          1000 * mean_dt[0],
                                          1000 * mean_dt[1]))
 
@@ -260,13 +264,14 @@ class ModelTrainer:
                 if model.config.saving:
                     process = psutil.Process(os.getpid())
                     with open(join(model.saving_path, 'training.txt'), "a") as file:
-                        message = '{:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.2f} {:.1f}\n'
+                        message = '{:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.2f} {:.1f}\n'
                         file.write(message.format(self.training_step,
                                                   L_out,
                                                   L_reg,
                                                   L_p,
                                                   coarse_em,
-                                                  coarse_cd,
+                                                  fine_cd,
+                                                  mixed_loss,
                                                   t[-1] - t0,
                                                   process.memory_info().rss * 1e-6))
 
@@ -308,29 +313,18 @@ class ModelTrainer:
                     self.sess.run(op)
 
                 # Update hyper-parameter alpha
-                if self.training_epoch in model.config.alpha_epoch:
-                    op = model.alpha.assign(model.config.alphas[self.training_epoch])
+                if self.training_step in model.config.alpha_epoch:
+                    op = model.alpha.assign(model.config.alphas[self.training_step])
                     self.sess.run(op)
 
                 # Increment
                 self.training_epoch += 1
 
                 # Validation
-                if model.config.network_model == 'classification':
-                    self.validation_error(model, dataset)
-                elif model.config.network_model == 'segmentation':
-                    self.segment_validation_error(model, dataset)
-                elif model.config.network_model == 'multi_segmentation':
-                    self.multi_validation_error(model, dataset)
-                elif model.config.network_model == 'cloud_segmentation':
-                    self.cloud_validation_error(model, dataset)
-                elif model.config.network_model == 'completion':
+                if model.config.network_model == 'completion':
                     self.completion_validation_error(model, dataset)
                 else:
                     raise ValueError('No validation method implemented for this network type')
-
-                # self.training_preds = np.zeros(0)
-                # self.training_labels = np.zeros(0)
 
                 # Reset iterator on training data
                 self.sess.run(dataset.train_init_op)
@@ -383,7 +377,8 @@ class ModelTrainer:
         #####################
 
         coarse_em_list = []
-        coarse_cd_list = []
+        fine_cd_list = []
+        mixed_loss_list = []
         coarse_list = []
         complete_points_list = []
         partial_points_list = []
@@ -395,14 +390,16 @@ class ModelTrainer:
             try:
                 # Run one step of the model.
                 t = [time.time()]
-                ops = (self.coarse_earth_mover, self.coarse_chamfer, model.coarse, model.complete_points,
+                ops = (self.coarse_earth_mover, self.fine_chamfer, self.mixed_loss, model.coarse, model.complete_points,
                        model.inputs['points'], model.inputs['object_inds'])
-                coarse_em, coarse_cd, coarse, complete, partial, inds = self.sess.run(ops, {model.dropout_prob: 1.0})
+                coarse_em, fine_cd, mixed_loss, coarse, complete, partial, inds = self.sess.run(ops, {
+                    model.dropout_prob: 1.0})
                 t += [time.time()]
 
                 # Get distances and obj_indexes
                 coarse_em_list += [coarse_em]
-                coarse_cd_list += [coarse_cd]
+                fine_cd_list += [fine_cd]
+                mixed_loss_list += [mixed_loss]
                 coarse_list += [coarse]
                 complete_points_list += [complete]
                 partial_points_list += [partial]
@@ -424,25 +421,32 @@ class ModelTrainer:
                 break
 
         coarse_em_mean = np.mean(coarse_em_list)
-        coarse_cd_mean = np.mean(coarse_cd_list)
-        print('Validation distances\nMean Chamfer: {:4.3f}\tMean Earth Mover: {:4.3f}'.format(coarse_cd_mean,
-                                                                                              coarse_em_mean))
+        fine_cd_mean = np.mean(fine_cd_list)
+        mixed_loss_mean = np.mean(mixed_loss_list)
+        print(
+            'Validation distances\nMean (Fine) Chamfer: {:4.3f}\tMean (Coarse) Earth Mover: {:4.3f}\tMean Mixed Loss: '
+            '{:4.3f}'.format(
+                fine_cd_mean,
+                coarse_em_mean,
+                mixed_loss_mean))
 
         if model.config.saving:
             # Validation log file
             if not exists(join(model.saving_path, 'validation.txt')):
                 with open(join(model.saving_path, 'validation.txt'), "w") as file:
-                    file.write('Steps mean_coarse_EM mean_coarse_CD\n')
-                    message = '{:d} {:.3f} {:.3f}\n'
+                    file.write('Steps mean_coarse_EM mean_fine_CD mean_mixed_loss\n')
+                    message = '{:d} {:.3f} {:.3f} {:.3f}\n'
                     file.write(message.format(self.training_step,
                                               coarse_em_mean,
-                                              coarse_cd_mean))
+                                              fine_cd_mean,
+                                              mixed_loss_mean))
             else:
                 with open(join(model.saving_path, 'validation.txt'), "a") as file:
-                    message = '{:d} {:.3f} {:.3f}\n'
+                    message = '{:d} {:.3f} {:.3f} {:.3f}\n'
                     file.write(message.format(self.training_step,
                                               coarse_em_mean,
-                                              coarse_cd_mean))
+                                              fine_cd_mean,
+                                              mixed_loss_mean))
 
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))

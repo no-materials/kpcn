@@ -621,26 +621,30 @@ def assemble_decoder_blocks(inputs, config, dropout_prob, features, F):
     return features
 
 
-def assemble_architecture(inputs, config, dropout_prob):
+def assemble_encoder(inputs, config, dropout_prob):
     """
-    Definition of all the layers according to config
+    Definition of the encoder's layers according to config
     :param inputs: dictionary of inputs with keys [points, neighbors, pools, upsamples, features, batches, labels]
     :param config:
     :param dropout_prob:
     :return:
     """
-
     # First get features from encoder
     encoder_features = assemble_encoder_blocks(inputs, config, dropout_prob)
 
     bottleneck_features = encoder_features[-1]
 
-    # return assemble_decoder_blocks(inputs, config, dropout_prob, bottleneck_features, encoder_features)
-
     return bottleneck_features
 
 
-def completion_head(features, config, dropout_prob):
+def coarse_head(features, config, dropout_prob):
+    """
+    MLP + Reshape head layer for coarse output generation - the coarse output is used as one factor of the loss
+    :param features:
+    :param config:
+    :param dropout_prob:
+    :return:
+    """
     # Boolean of training
     training = dropout_prob < 0.99
 
@@ -661,15 +665,85 @@ def completion_head(features, config, dropout_prob):
     return tf.reshape(features, [-1, config.num_coarse, 3])
 
 
-# TODO: change this to Chamfer Distance & EMD - add fine...foldingnet...
-# TODO: add dynamic alpha tf variable
-def completion_loss(coarse, inputs, config, alpha, batch_average=False):
+def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse):
+    """
+    Assembles decoder architecture using folding operations
+    :param inputs:
+    :param config:
+    :param dropout_prob:
+    :param bottleneck_features:
+    :param coarse:
+    :return:
+    """
+
+    # Boolean of training
+    training = dropout_prob < 0.99
+
+    with tf.variable_scope('folding'):
+        # Create tiled grid features
+        x = tf.linspace(-config.grid_scale, config.grid_scale, config.grid_size)
+        y = tf.linspace(-config.grid_scale, config.grid_scale, config.grid_size)
+        grid = tf.meshgrid(x, y)
+        grid = tf.expand_dims(tf.reshape(tf.stack(grid, axis=2), [-1, 2]), 0)
+        grid_feat = tf.tile(grid, [bottleneck_features.shape[0], config.num_coarse, 1])
+
+        # Create tiled coarse point cloud features
+        point_feat = tf.tile(tf.expand_dims(coarse, 2), [1, 1, config.grid_size ** 2, 1])
+        point_feat = tf.reshape(point_feat, [-1, config.num_fine, 3])
+
+        # Create tiled bottleneck features
+        global_feat = tf.tile(tf.expand_dims(bottleneck_features, 1), [1, config.num_fine, 1])
+
+        feat = tf.concat([grid_feat, point_feat, global_feat], axis=2)
+
+        center = tf.tile(tf.expand_dims(coarse, 2), [1, 1, config.grid_size ** 2, 1])
+        center = tf.reshape(center, [-1, config.num_fine, 3])
+
+        feat = tf.reshape(feat, [-1, grid_feat.shape[-1] + point_feat.shape[-1] + global_feat.shape[-1]])
+
+        w = weight_variable([int(feat.shape[1]), 512])
+        x = conv_ops.unary_convolution(feat, w)
+        x = leaky_relu(batch_norm(x,
+                                  config.use_batch_norm,
+                                  config.batch_norm_momentum,
+                                  training))
+
+        w = weight_variable([int(x.shape[1]), 512])
+        x = conv_ops.unary_convolution(x, w)
+        x = leaky_relu(batch_norm(x,
+                                  config.use_batch_norm,
+                                  config.batch_norm_momentum,
+                                  training))
+
+        w = weight_variable([int(x.shape[1]), 3])
+        x = conv_ops.unary_convolution(x, w)
+        x = batch_norm(x,
+                       config.use_batch_norm,
+                       config.batch_norm_momentum,
+                       training)
+
+        x = tf.reshape(x, [-1, config.num_gt_points, 3])
+
+        fine = x + center
+    return fine
+
+
+# TODO: test that alpha hyperparameter is actually changing...
+def completion_loss(coarse, fine, inputs, config, alpha):
+    """
+    Combines generated coarse and fine outputs' weighted distances for loss computation
+    :param coarse: (batch_num, coarse_size, 3) shaped tensor
+    :param fine: (batch_num, num_fine, 3) shaped tensor
+    :param inputs: inputs dictionary of model from flat inputs
+    :param config: model/dataset config
+    :param alpha: hyper-parameter used for weighing the loss
+    :return:
+    """
     gt_ds = tf.reshape(inputs['complete_points'], [-1, config.num_gt_points, 3])
-    gt_ds = gt_ds[:, :config.num_coarse, :]
-    loss_coarse = earth_mover(coarse, gt_ds)
+    gt_ds_trunc = gt_ds[:, :config.num_coarse, :]
+    loss_coarse = earth_mover(coarse, gt_ds_trunc)
+    loss_fine = chamfer(fine, gt_ds)
 
-    # loss_fine = chamfer(fine, gt)
-    #
-    # loss = loss_coarse + alpha * loss_fine
+    loss = loss_coarse + alpha * loss_fine
 
-    return loss_coarse
+    return loss

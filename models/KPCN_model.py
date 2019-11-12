@@ -13,7 +13,7 @@ import tensorflow as tf
 import sys
 
 # Convolution functions
-from models.network_blocks import assemble_encoder_blocks, assemble_architecture, completion_head
+from models.network_blocks import assemble_encoder, coarse_head, assemble_decoder
 
 from models.network_blocks import completion_loss
 
@@ -90,13 +90,19 @@ class KernelPointCompletionNetwork:
 
         # Create layers
         with tf.variable_scope('KernelPointNetwork'):
-            self.bottleneck_features = assemble_architecture(self.inputs,
-                                                             self.config,
-                                                             self.dropout_prob)
+            self.bottleneck_features = assemble_encoder(self.inputs,
+                                                        self.config,
+                                                        self.dropout_prob)
 
-            self.coarse = completion_head(self.bottleneck_features,
-                                          self.config,
-                                          self.dropout_prob)
+            self.coarse = coarse_head(self.bottleneck_features,
+                                      self.config,
+                                      self.dropout_prob)
+
+            self.fine = assemble_decoder(self.inputs,
+                                         self.config,
+                                         self.dropout_prob,
+                                         self.bottleneck_features,
+                                         self.coarse)
 
         ########
         # Losses
@@ -105,10 +111,10 @@ class KernelPointCompletionNetwork:
         with tf.variable_scope('loss'):
 
             self.output_loss = completion_loss(self.coarse,
+                                               self.fine,
                                                self.inputs,
                                                config,
-                                               self.alpha,
-                                               batch_average=self.config.batch_averaged_loss)
+                                               self.alpha)
 
             # Add regularization
             self.loss = self.regularization_losses() + self.output_loss
