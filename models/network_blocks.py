@@ -685,7 +685,7 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse):
         y = tf.linspace(-config.grid_scale, config.grid_scale, config.grid_size)
         grid = tf.meshgrid(x, y)
         grid = tf.expand_dims(tf.reshape(tf.stack(grid, axis=2), [-1, 2]), 0)
-        grid_feat = tf.tile(grid, [bottleneck_features.shape[0], config.num_coarse, 1])
+        grid_feat = tf.tile(grid, [tf.shape(bottleneck_features)[0], config.num_coarse, 1])
 
         # Create tiled coarse point cloud features
         point_feat = tf.tile(tf.expand_dims(coarse, 2), [1, 1, config.grid_size ** 2, 1])
