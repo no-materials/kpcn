@@ -209,8 +209,9 @@ class ShapeNetV1Dataset(Dataset):
                     complete_points = np.vstack((complete_data['x'], complete_data['y'], complete_data['z'])).astype(
                         np.float32).T
 
-                    if subsampling_parameter > 0:
-                        sub_complete_points = grid_subsampling(complete_points, sampleDl=subsampling_parameter)
+                    # GT prob should not be grid subsampled...no reason for that to happen...
+                    # if subsampling_parameter > 0:
+                    #     sub_complete_points = grid_subsampling(complete_points, sampleDl=subsampling_parameter)
 
                     # For each scan, read partial ply data, if subsample param exists, save subsampled partial pc
                     for s in range(self.num_scans):
@@ -223,7 +224,7 @@ class ShapeNetV1Dataset(Dataset):
                             sub_partial_points = grid_subsampling(partial_points, sampleDl=subsampling_parameter)
                             self.partial_points[split_type] += [sub_partial_points]
                             # complete points & synsets will be duplicated/matched for each scan
-                            self.complete_points[split_type] += [sub_complete_points]
+                            self.complete_points[split_type] += [complete_points]
                             self.categories[split_type] += [cat_id]
                         else:
                             self.partial_points[split_type] += [partial_points]

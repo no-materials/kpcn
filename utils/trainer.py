@@ -199,9 +199,6 @@ class ModelTrainer:
         epoch_n = 1
         mean_epoch_n = 0
 
-        # TODO: remove, was for debug
-        self.completion_validation_error(model, dataset)
-
         # Initialise iterator with train data
         self.sess.run(dataset.train_init_op)
 
@@ -447,7 +444,6 @@ class ModelTrainer:
                                               coarse_em_mean,
                                               coarse_cd_mean))
 
-            # TODO: implement validation visu
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))
 
@@ -457,9 +453,9 @@ class ModelTrainer:
                 plot_path = join(model.saving_path, 'visu',
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
-                partial_temp = pcs[0][0][:3000, :]  # TODO: fix hardcoded cloud sizes - use config values
+                partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
-                complete_temp = pcs[2][:16384, :]
+                complete_temp = pcs[2][:model.config.num_gt_points, :]
                 final_pcs = [partial_temp, coarse_temp, complete_temp]
                 self.plot_pc_three_views(plot_path, final_pcs, visualize_titles)
 
