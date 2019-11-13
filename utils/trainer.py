@@ -84,7 +84,7 @@ class ModelTrainer:
         self.sess.run(tf.global_variables_initializer())
 
         # Name of the snapshot to restore to (None if you want to start from beginning)
-        restore_snap = '/content/drive/My Drive/kpcn/results/Log_2019_11_13_13_28_41/snapshots/snap-10869'
+        restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-10869')
         if restore_snap is not None:
             # TODO: change this when new head & loss is fully integrated
             exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
