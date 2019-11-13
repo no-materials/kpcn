@@ -201,9 +201,6 @@ class ModelTrainer:
         epoch_n = 1
         mean_epoch_n = 0
 
-        # TODO: remove (was for debug)
-        self.completion_validation_error(model, dataset)
-
         # Initialise iterator with train data
         self.sess.run(dataset.train_init_op)
 
@@ -457,9 +454,8 @@ class ModelTrainer:
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))
 
-            # TODO: Plot Fine completion as well!!!!
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
-            visualize_titles = ['input', 'coarse output', 'fine_output', 'ground truth']
+            visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
             for i in range(0, len(coarse_list), 5):
                 plot_path = join(model.saving_path, 'visu',  # TODO: add ids as plot filename
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
@@ -538,7 +534,7 @@ class ModelTrainer:
                             xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
         if sizes is None:
             sizes = [0.5 for i in range(len(pcs))]
-        fig = plt.figure(figsize=(len(pcs) * 4, 9))
+        fig = plt.figure(figsize=(len(pcs) * 3, 9))
         for i in range(3):
             elev = 30
             azim = -45 + 90 * i
