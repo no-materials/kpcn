@@ -169,9 +169,6 @@ class ModelTrainer:
         Train the model on a particular dataset.
         """
 
-        # TODO: remove (was for debug)
-        self.completion_validation_error(model, dataset)
-
         if debug_NaN:
             # Add checking ops
             self.check_op = tf.add_check_numerics_ops()
@@ -203,6 +200,9 @@ class ModelTrainer:
         self.training_labels = np.zeros(0)
         epoch_n = 1
         mean_epoch_n = 0
+
+        # TODO: remove (was for debug)
+        self.completion_validation_error(model, dataset)
 
         # Initialise iterator with train data
         self.sess.run(dataset.train_init_op)
