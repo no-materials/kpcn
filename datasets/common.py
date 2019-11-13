@@ -398,7 +398,79 @@ class Dataset:
         self.train_init_op = iter.make_initializer(self.train_data)
         self.val_init_op = iter.make_initializer(self.val_data)
 
-    # TODO: move to subclass ShapeNetV1Dataset?
+    def init_test_input_pipeline(self, config):
+        """
+        Prepare the input pipeline with tf.Dataset class
+        """
+
+        print('Initiating test input pipelines')
+
+        ######################
+        # Calibrate parameters
+        ######################
+
+        # Update num categories in config
+        config.num_categories = self.num_categories - len(self.ignored_categories)
+        config.ignored_category_ids = [self.synset_to_idx[ign_label] for ign_label in self.ignored_categories]
+
+        # Update network model in config
+        config.network_model = self.network_model
+
+        # Calibrate generators to batch_num or use static batch limit
+        if config.per_cloud_batch:
+            self.batch_limit = config.batch_num
+        else:
+            self.batch_limit = self.calibrate_batches(config)
+
+        # From config parameter, compute higher bound of neighbors number in a neighborhood
+        hist_n = int(np.ceil(4 / 3 * np.pi * (config.density_parameter + 1) ** 3))
+
+        # Initiate neighbors limit with higher bound
+        self.neighborhood_limits = np.full(config.num_layers, hist_n, dtype=np.int32)
+
+        # Calibrate max neighbors number
+        self.calibrate_neighbors(config)
+
+        ################################
+        # Initiate tensorflow parameters
+        ################################
+
+        # Reset graph
+        tf.reset_default_graph()
+
+        # Set random seed (You also have to set it in network_architectures.weight_variable)
+        # np.random.seed(42)
+        # tf.set_random_seed(42)
+
+        # Get generator and mapping function
+        gen_function, gen_types, gen_shapes = self.get_batch_gen('test', config)
+        map_func = self.get_tf_mapping(config)
+
+        ##############
+        # Test dataset
+        ##############
+
+        # Create batched dataset from generator
+        self.test_data = tf.data.Dataset.from_generator(gen_function,
+                                                        gen_types,
+                                                        gen_shapes)
+
+        self.test_data = self.test_data.map(map_func=map_func, num_parallel_calls=self.num_threads)
+
+        # Prefetch data
+        self.test_data = self.test_data.prefetch(10)
+
+        #################
+        # Common iterator
+        #################
+
+        # create a iterator of the correct shape and type
+        iter = tf.data.Iterator.from_structure(self.test_data.output_types, self.test_data.output_shapes)
+        self.flat_inputs = iter.get_next()
+
+        # create the initialisation operations
+        self.test_init_op = iter.make_initializer(self.test_data)
+
     def calibrate_batches(self, config):
         if 'cloud' in self.network_model:
             if len(self.input_trees['train']) > 0:
