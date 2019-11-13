@@ -169,6 +169,9 @@ class ModelTrainer:
         Train the model on a particular dataset.
         """
 
+        # TODO: remove (was for debug)
+        self.completion_validation_error(model, dataset)
+
         if debug_NaN:
             # Add checking ops
             self.check_op = tf.add_check_numerics_ops()
@@ -380,6 +383,7 @@ class ModelTrainer:
         fine_cd_list = []
         mixed_loss_list = []
         coarse_list = []
+        fine_list = []
         complete_points_list = []
         partial_points_list = []
         obj_inds = []
@@ -390,9 +394,10 @@ class ModelTrainer:
             try:
                 # Run one step of the model.
                 t = [time.time()]
-                ops = (self.coarse_earth_mover, self.fine_chamfer, self.mixed_loss, model.coarse, model.complete_points,
+                ops = (self.coarse_earth_mover, self.fine_chamfer, self.mixed_loss, model.coarse, model.fine,
+                       model.complete_points,
                        model.inputs['points'], model.inputs['object_inds'])
-                coarse_em, fine_cd, mixed_loss, coarse, complete, partial, inds = self.sess.run(ops, {
+                coarse_em, fine_cd, mixed_loss, coarse, fine, complete, partial, inds = self.sess.run(ops, {
                     model.dropout_prob: 1.0})
                 t += [time.time()]
 
@@ -401,6 +406,7 @@ class ModelTrainer:
                 fine_cd_list += [fine_cd]
                 mixed_loss_list += [mixed_loss]
                 coarse_list += [coarse]
+                fine_list += [fine]
                 complete_points_list += [complete]
                 partial_points_list += [partial]
                 obj_inds += [inds]
@@ -451,16 +457,18 @@ class ModelTrainer:
             if not exists(join(model.saving_path, 'visu')):
                 makedirs(join(model.saving_path, 'visu'))
 
-            all_pcs = [partial_points_list, coarse_list, complete_points_list]
-            visualize_titles = ['input', 'coarse output', 'ground truth']
+            # TODO: Plot Fine completion as well!!!!
+            all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
+            visualize_titles = ['input', 'coarse output', 'fine_output', 'ground truth']
             for i in range(0, len(coarse_list), 5):
-                plot_path = join(model.saving_path, 'visu',
+                plot_path = join(model.saving_path, 'visu',  # TODO: add ids as plot filename
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
-                complete_temp = pcs[2][:model.config.num_gt_points, :]
-                final_pcs = [partial_temp, coarse_temp, complete_temp]
+                fine_temp = pcs[2][0, :, :]
+                complete_temp = pcs[3][:model.config.num_gt_points, :]
+                final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
                 self.plot_pc_three_views(plot_path, final_pcs, visualize_titles)
 
     # Saving methods
@@ -530,7 +538,7 @@ class ModelTrainer:
                             xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
         if sizes is None:
             sizes = [0.5 for i in range(len(pcs))]
-        fig = plt.figure(figsize=(len(pcs) * 3, 9))
+        fig = plt.figure(figsize=(len(pcs) * 4, 9))
         for i in range(3):
             elev = 30
             azim = -45 + 90 * i
