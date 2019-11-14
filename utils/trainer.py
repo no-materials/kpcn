@@ -193,7 +193,7 @@ class ModelTrainer:
         # Train loop variables
         t0 = time.time()
         self.training_step = 31706
-        self.training_epoch = 19
+        self.training_epoch = 23
         mean_dt = np.zeros(2)
         last_display = t0
         self.training_preds = np.zeros(0)
