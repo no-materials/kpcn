@@ -84,7 +84,7 @@ class ModelTrainer:
         self.sess.run(tf.global_variables_initializer())
 
         # Name of the snapshot to restore to (None if you want to start from beginning)
-        restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-10869')
+        restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-31706')
         if restore_snap is not None:
             # TODO: change this when new head & loss is fully integrated
             exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
@@ -192,8 +192,8 @@ class ModelTrainer:
 
         # Train loop variables
         t0 = time.time()
-        self.training_step = 10869
-        self.training_epoch = 3
+        self.training_step = 31706
+        self.training_epoch = 19
         mean_dt = np.zeros(2)
         last_display = t0
         self.training_preds = np.zeros(0)
@@ -280,7 +280,7 @@ class ModelTrainer:
                     break
 
                 if model.config.dataset.startswith('ShapeNetPart') or model.config.dataset.startswith(
-                        'ModelNet') or model.config.dataset.startswith('ShapeNetV1'):
+                        'ModelNet'):
                     if model.config.epoch_steps and epoch_n > model.config.epoch_steps:
                         raise tf.errors.OutOfRangeError(None, None, '')
 
