@@ -721,6 +721,7 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse):
                        config.use_batch_norm,
                        config.batch_norm_momentum,
                        training)
+        # todo: try double folding
 
         x = tf.reshape(x, [-1, config.num_gt_points, 3])
 

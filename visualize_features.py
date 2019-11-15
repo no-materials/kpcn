@@ -24,7 +24,8 @@ from datasets.ShapeNetV1 import ShapeNetV1Dataset
 
 # CONFIG THESE ###################################
 drive_dir = '/content/drive/My Drive/kpcn/'
-drive_results = os.path.join(drive_dir, 'results')
+# drive_results = os.path.join(drive_dir, 'results')
+drive_results = 'results'
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -87,9 +88,9 @@ def visu_caller(path, step_ind, relu_idx, compute_activations):
         # config.augment_symmetries = False
 
         # TODO: remove these?...
-        config.batch_num = 3
-        config.in_radius = 4
-        config.validation_size = 200
+        # config.batch_num = 3
+        # config.in_radius = 4
+        # config.validation_size = 200
 
         ##############
         # Prepare Data
@@ -174,7 +175,7 @@ if __name__ == '__main__':
     #       > 'results/Log_YYYY-MM-DD_HH-MM-SS': Directly provide the path of a trained model
     #
 
-    chosen_log = os.path.join(drive_results, 'Log_2019-11-12_16-54-15')
+    chosen_log = os.path.join(drive_results, 'Log_2019-11-13_13-28-41')
 
     #
     #   You can also choose the index of the snapshot to load (last by default)
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     #   Let it be None to choose later.
     #
 
-    chosen_relu = 0
+    chosen_relu = 27
 
     #
     #   Because of the time needed to compute feature activations for the test set, if you already computed them, they

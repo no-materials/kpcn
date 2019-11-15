@@ -84,7 +84,7 @@ class ModelTrainer:
         self.sess.run(tf.global_variables_initializer())
 
         # Name of the snapshot to restore to (None if you want to start from beginning)
-        restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-42575')
+        restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-53444')
         if restore_snap is not None:
             # TODO: change this when new head & loss is fully integrated
             exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
@@ -192,8 +192,8 @@ class ModelTrainer:
 
         # Train loop variables
         t0 = time.time()
-        self.training_step = 42575
-        self.training_epoch = 26
+        self.training_step = 53444
+        self.training_epoch = 29
         mean_dt = np.zeros(2)
         last_display = t0
         self.training_preds = np.zeros(0)
