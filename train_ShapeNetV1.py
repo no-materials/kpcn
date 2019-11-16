@@ -2,6 +2,7 @@
 import time
 import os
 import sys
+import argparse
 
 # Custom libs
 from utils.config import Config
@@ -178,7 +179,15 @@ if __name__ == '__main__':
     # Load the model parameters
     ###########################
 
-    config = ShapeNetV1Config()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--saving_path')
+    parser.add_argument('--double_fold', action='store_true')
+    parser.add_argument('--snap', type=int)
+    parser.add_argument('--epoch', type=int)
+
+    args = parser.parse_args()
+
+    config = ShapeNetV1Config(args.saving_path)
 
     ##############
     # Prepare Data
@@ -209,10 +218,13 @@ if __name__ == '__main__':
     t1 = time.time()
 
     # Model class
-    model = KernelPointCompletionNetwork(dataset.flat_inputs, config)
+    model = KernelPointCompletionNetwork(dataset.flat_inputs, config, args.double_fold)
 
     # Trainer class
-    trainer = ModelTrainer(model)
+    if args.saving_path is not None:
+        trainer = ModelTrainer(model, os.path.join(model.config.saving_path, 'snapshots/snap-%s' % str(args.snap)))
+    else:
+        trainer = ModelTrainer(model)
     t2 = time.time()
 
     print('\n----------------')
@@ -226,4 +238,7 @@ if __name__ == '__main__':
     print('Start Training')
     print('**************\n')
 
-    trainer.train(model, dataset)
+    if args.snap is not None:
+        trainer.train(model, dataset, str(args.snap), str(args.epoch))
+    else:
+        trainer.train(model, dataset)

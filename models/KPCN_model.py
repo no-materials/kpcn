@@ -7,10 +7,11 @@
 
 # Basic libs
 from os import makedirs
-from os.path import exists
+from os.path import exists, join
 import time
 import tensorflow as tf
 import sys
+import utils.workspace as ws
 
 # Convolution functions
 from models.network_blocks import assemble_encoder, coarse_head, assemble_decoder
@@ -26,7 +27,7 @@ from models.network_blocks import completion_loss
 
 class KernelPointCompletionNetwork:
 
-    def __init__(self, flat_inputs, config):
+    def __init__(self, flat_inputs, config, double_fold):
         """
         Initiate the model
         :param flat_inputs: List of input tensors (flatten)
@@ -39,7 +40,7 @@ class KernelPointCompletionNetwork:
         # Path of the result folder
         if self.config.saving:
             if self.config.saving_path is None:
-                self.saving_path = time.strftime('/content/drive/My Drive/kpcn/results/Log_%Y-%m-%d_%H-%M-%S',
+                self.saving_path = time.strftime(join(ws.drive_results_dir, 'Log_%Y-%m-%d_%H-%M-%S'),
                                                  time.gmtime())
             else:
                 self.saving_path = self.config.saving_path
@@ -104,7 +105,7 @@ class KernelPointCompletionNetwork:
                                          self.dropout_prob,
                                          self.bottleneck_features,
                                          self.coarse,
-                                         True)
+                                         double_fold)
 
         ########
         # Losses

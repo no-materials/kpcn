@@ -164,7 +164,7 @@ class ModelTrainer:
     # Training main method
     # ------------------------------------------------------------------------------------------------------------------
 
-    def train(self, model, dataset, debug_NaN=False):
+    def train(self, model, dataset, snap=None, epoch=None, debug_NaN=False):
         """
         Train the model on a particular dataset.
         """
@@ -192,8 +192,8 @@ class ModelTrainer:
 
         # Train loop variables
         t0 = time.time()
-        self.training_step = 0
-        self.training_epoch = 0
+        self.training_step = 0 if snap is None else snap
+        self.training_epoch = 0 if epoch is None else epoch
         mean_dt = np.zeros(2)
         last_display = t0
         self.training_preds = np.zeros(0)
