@@ -103,7 +103,8 @@ class KernelPointCompletionNetwork:
                                          self.config,
                                          self.dropout_prob,
                                          self.bottleneck_features,
-                                         self.coarse)
+                                         self.coarse,
+                                         True)
 
         ########
         # Losses

@@ -116,7 +116,7 @@ class ShapeNetV1Config(Config):
 
     # Hyperparameter alpha for distance loss weighting
     alphas = [0.01, 0.1, 0.5, 1.0]
-    alpha_epoch = [1, 10000, 20000, 50000]
+    alpha_epoch = [1, 10000, 50000, 100000]
 
     # Learning rate management
     learning_rate = 1e-2

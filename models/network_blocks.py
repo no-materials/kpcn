@@ -665,7 +665,7 @@ def coarse_head(features, config, dropout_prob):
     return tf.reshape(features, [-1, config.num_coarse, 3])
 
 
-def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse):
+def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse, double_fold):
     """
     Assembles decoder architecture using folding operations
     :param inputs:
@@ -721,7 +721,31 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse):
                        config.use_batch_norm,
                        config.batch_norm_momentum,
                        training)
-        # todo: try double folding
+
+        if double_fold:
+
+            x = tf.concat([x, global_feat], axis=2)
+
+            w = weight_variable([int(x.shape[1]), 512])
+            x = conv_ops.unary_convolution(feat, w)
+            x = leaky_relu(batch_norm(x,
+                                      config.use_batch_norm,
+                                      config.batch_norm_momentum,
+                                      training))
+
+            w = weight_variable([int(x.shape[1]), 512])
+            x = conv_ops.unary_convolution(x, w)
+            x = leaky_relu(batch_norm(x,
+                                      config.use_batch_norm,
+                                      config.batch_norm_momentum,
+                                      training))
+
+            w = weight_variable([int(x.shape[1]), 3])
+            x = conv_ops.unary_convolution(x, w)
+            x = batch_norm(x,
+                           config.use_batch_norm,
+                           config.batch_norm_momentum,
+                           training)
 
         x = tf.reshape(x, [-1, config.num_gt_points, 3])
 
