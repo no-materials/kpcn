@@ -150,8 +150,8 @@ class ShapeNetV1Config(Config):
 
     # Do we nee to save convergence
     saving = True
-    saving_path = '/content/drive/My Drive/kpcn/results/Log_2019-11-13_13-28-41'
-
+    # saving_path = '/content/drive/My Drive/kpcn/results/Log_2019-11-13_13-28-41'  # this is one fold
+    saving_path = None
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
