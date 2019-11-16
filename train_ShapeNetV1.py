@@ -239,6 +239,6 @@ if __name__ == '__main__':
     print('**************\n')
 
     if args.snap is not None:
-        trainer.train(model, dataset, str(args.snap), str(args.epoch))
+        trainer.train(model, dataset, args.snap, args.epoch)
     else:
         trainer.train(model, dataset)
