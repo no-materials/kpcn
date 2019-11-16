@@ -1,7 +1,6 @@
 # Common libs
 import time
 import os
-import sys
 import argparse
 
 # Custom libs
@@ -154,6 +153,7 @@ class ShapeNetV1Config(Config):
     # saving_path = '/content/drive/My Drive/kpcn/results/Log_2019-11-13_13-28-41'  # this is one fold
     saving_path = None
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 #
 #           Main Call
@@ -162,6 +162,14 @@ class ShapeNetV1Config(Config):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
+                                     description="Train model on the ShapeNetV1 dataset", )
+    parser.add_argument('--saving_path')
+    parser.add_argument('--double_fold', action='store_true')
+    parser.add_argument('--snap', type=int)
+    parser.add_argument('--epoch', type=int)
+    args = parser.parse_args()
+
     ##########################
     # Initiate the environment
     ##########################
@@ -178,14 +186,6 @@ if __name__ == '__main__':
     ###########################
     # Load the model parameters
     ###########################
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--saving_path')
-    parser.add_argument('--double_fold', action='store_true')
-    parser.add_argument('--snap', type=int)
-    parser.add_argument('--epoch', type=int)
-
-    args = parser.parse_args()
 
     config = ShapeNetV1Config(args.saving_path)
 
