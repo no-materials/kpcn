@@ -28,7 +28,9 @@ from mpl_toolkits.mplot3d import Axes3D
 from utils.ply import read_ply, write_ply
 
 # Metrics
-from utils.metrics import IoU_from_confusions, chamfer, earth_mover
+from utils.metrics import chamfer, earth_mover
+
+from utils.visualizer import plot_pc_compare_views
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -185,6 +187,7 @@ class ModelTrainer:
             if not exists(join(model.saving_path, 'training.txt')):
                 with open(join(model.saving_path, 'training.txt'), "w") as file:
                     file.write('Steps out_loss reg_loss point_loss coarse_EM fine_CD mixed_loss time memory\n')
+            # TODO: delete training.txt lines after snapshot
 
             # Killing file (simply delete this file when you want to stop the training)
             if not exists(join(model.saving_path, 'running_PID.txt')):
@@ -458,7 +461,7 @@ class ModelTrainer:
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
             for i in range(0, len(coarse_list), 5):
-                plot_path = join(model.saving_path, 'visu',  # TODO: add ids as plot filename
+                plot_path = join(model.saving_path, 'visu', 'valid',  # TODO: add ids as plot filename
                                  'epoch_%d_step_%d_%d.png' % (self.training_epoch, self.training_step, i))
                 pcs = [x[i] for x in all_pcs]
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
@@ -466,7 +469,7 @@ class ModelTrainer:
                 fine_temp = pcs[2][0, :, :]
                 complete_temp = pcs[3][:model.config.num_gt_points, :]
                 final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
-                self.plot_pc_three_views(plot_path, final_pcs, visualize_titles)
+                plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
     # Saving methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -526,30 +529,3 @@ class ModelTrainer:
                 np_name = '_'.join(v.name[:-2].split('/')[1:-1]) + '.npy'
                 np_file = join(kernels_dir, np_name)
                 np.save(np_file, kernel_weights)
-
-    # Visualisation methods
-    # ------------------------------------------------------------------------------------------------------------------
-
-    @staticmethod
-    def plot_pc_three_views(filename, pcs, titles, suptitle='', sizes=None, cmap='Reds', zdir='y',
-                            xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
-        if sizes is None:
-            sizes = [0.5 for i in range(len(pcs))]
-        fig = plt.figure(figsize=(len(pcs) * 3, 9))
-        for i in range(3):
-            elev = 30
-            azim = -45 + 90 * i
-            for j, (pc, size) in enumerate(zip(pcs, sizes)):
-                color = pc[:, 0]
-                ax = fig.add_subplot(3, len(pcs), i * len(pcs) + j + 1, projection='3d')
-                ax.view_init(elev, azim)
-                ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], zdir=zdir, c=color, s=size, cmap=cmap, vmin=-1, vmax=0.5)
-                ax.set_title(titles[j])
-                ax.set_axis_off()
-                ax.set_xlim(xlim)
-                ax.set_ylim(ylim)
-                ax.set_zlim(zlim)
-        plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.9, wspace=0.1, hspace=0.1)
-        plt.suptitle(suptitle)
-        fig.savefig(filename)
-        plt.close(fig)

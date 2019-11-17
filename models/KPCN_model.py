@@ -27,6 +27,7 @@ from models.network_blocks import completion_loss
 
 class KernelPointCompletionNetwork:
 
+    # TODO: (MUST DO) remove double_fold arg from constructor and store as a config parameter
     def __init__(self, flat_inputs, config, double_fold):
         """
         Initiate the model

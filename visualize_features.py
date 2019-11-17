@@ -122,7 +122,7 @@ def visu_caller(path, step_ind, relu_idx, compute_activations):
         t1 = time.time()
 
         if config.dataset.startswith('ShapeNetV1'):
-            model = KernelPointCompletionNetwork(dataset.flat_inputs, config)
+            model = KernelPointCompletionNetwork(dataset.flat_inputs, config, False)
         else:
             raise ValueError('Unsupported dataset : ' + config.dataset)
 
