@@ -187,7 +187,8 @@ if __name__ == '__main__':
     # Load the model parameters
     ###########################
 
-    config = ShapeNetV1Config(args.saving_path)
+    config = ShapeNetV1Config()
+    config.load(args.saving_path)
 
     ##############
     # Prepare Data

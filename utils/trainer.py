@@ -182,8 +182,9 @@ class ModelTrainer:
 
         if model.config.saving:
             # Training log file
-            with open(join(model.saving_path, 'training.txt'), "w") as file:
-                file.write('Steps out_loss reg_loss point_loss coarse_EM fine_CD mixed_loss time memory\n')
+            if not exists(join(model.saving_path, 'training.txt')):
+                with open(join(model.saving_path, 'training.txt'), "w") as file:
+                    file.write('Steps out_loss reg_loss point_loss coarse_EM fine_CD mixed_loss time memory\n')
 
             # Killing file (simply delete this file when you want to stop the training)
             if not exists(join(model.saving_path, 'running_PID.txt')):

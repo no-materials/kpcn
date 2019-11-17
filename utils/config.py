@@ -163,14 +163,13 @@ class Config:
     saving = True
     saving_path = None
 
-    def __init__(self, saving_path):
+    def __init__(self):
         """
         Class initializer
         """
 
         # Num of layers
         self.num_layers = len([block for block in self.architecture if 'pool' in block or 'strided' in block]) + 1
-        self.saving_path = saving_path
 
     def load(self, path):
 
