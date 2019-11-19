@@ -205,9 +205,18 @@ class ModelTrainer:
         # Initialise iterator with train data
         self.sess.run(dataset.train_init_op)
 
-        if self.training_step in model.config.alpha_epoch:
-            op = model.alpha.assign(model.config.alphas[self.training_step])
-            self.sess.run(op)
+        # Assign hyperparameter alpha only after restoration
+        alpha_idx = 0
+        if 0 <= self.training_step < model.config.alpha_epoch[1]:
+            alpha_idx = 0
+        elif model.config.alpha_epoch[1] <= self.training_step < model.config.alpha_epoch[2]:
+            alpha_idx = 1
+        elif model.config.alpha_epoch[2] <= self.training_step < model.config.alpha_epoch[3]:
+            alpha_idx = 2
+        elif self.training_step >= model.config.alpha_epoch[3]:
+            alpha_idx = 3
+        op = model.alpha.assign(model.config.alphas[alpha_idx])
+        self.sess.run(op)
 
         # Start loop
         while self.training_epoch < model.config.max_epoch:
@@ -237,7 +246,7 @@ class ModelTrainer:
 
                 else:
                     # Run normal
-                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops, {model.dropout_prob: 0.5})
+                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops,{model.dropout_prob: 0.5})
 
                 t += [time.time()]
 
@@ -350,6 +359,11 @@ class ModelTrainer:
             # Increment steps
             self.training_step += 1
             epoch_n += 1
+
+            # Update hyper-parameter alpha
+            if self.training_step in model.config.alpha_epoch:
+                op = model.alpha.assign(model.config.alphas[self.training_step])
+                self.sess.run(op)
 
         # Remove File for kill signal
         if exists(join(model.saving_path, 'running_PID.txt')):
