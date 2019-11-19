@@ -208,13 +208,13 @@ class ModelTrainer:
         # Assign hyperparameter alpha only after restoration
         # TODO: implement for generic amount of alpha epoch values
         alpha_idx = 0
-        if 0 <= self.training_step < model.config.alpha_epoch[1]:
+        if 0 <= self.training_epoch < model.config.alpha_epoch[1]:
             alpha_idx = 0
-        elif model.config.alpha_epoch[1] <= self.training_step < model.config.alpha_epoch[2]:
+        elif model.config.alpha_epoch[1] <= self.training_epoch < model.config.alpha_epoch[2]:
             alpha_idx = 1
-        elif model.config.alpha_epoch[2] <= self.training_step < model.config.alpha_epoch[3]:
+        elif model.config.alpha_epoch[2] <= self.training_epoch < model.config.alpha_epoch[3]:
             alpha_idx = 2
-        elif self.training_step >= model.config.alpha_epoch[3]:
+        elif self.training_epoch >= model.config.alpha_epoch[3]:
             alpha_idx = 3
         op = model.alpha.assign(model.config.alphas[alpha_idx])
         self.sess.run(op)
@@ -331,13 +331,14 @@ class ModelTrainer:
                                                                model.config.lr_decays[self.training_epoch]))
                     self.sess.run(op)
 
-                # Update hyper-parameter alpha
-                if self.training_step in model.config.alpha_epoch:
-                    op = model.alpha.assign(model.config.alphas[self.training_step])
-                    self.sess.run(op)
-
                 # Increment
                 self.training_epoch += 1
+
+                # Update hyper-parameter alpha
+                if self.training_epoch in model.config.alpha_epoch:
+                    alpha_idx = model.config.alpha_epoch.index(self.training_epoch)
+                    op = model.alpha.assign(model.config.alphas[alpha_idx])
+                    self.sess.run(op)
 
                 # Validation
                 if model.config.network_model == 'completion':
@@ -363,11 +364,6 @@ class ModelTrainer:
             # Increment steps
             self.training_step += 1
             epoch_n += 1
-
-            # Update hyper-parameter alpha
-            if self.training_step in model.config.alpha_epoch:
-                op = model.alpha.assign(model.config.alphas[self.training_step])
-                self.sess.run(op)
 
         # Remove File for kill signal
         if exists(join(model.saving_path, 'running_PID.txt')):
