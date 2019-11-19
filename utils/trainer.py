@@ -206,6 +206,7 @@ class ModelTrainer:
         self.sess.run(dataset.train_init_op)
 
         # Assign hyperparameter alpha only after restoration
+        # TODO: implement for generic amount of alpha epoch values
         alpha_idx = 0
         if 0 <= self.training_step < model.config.alpha_epoch[1]:
             alpha_idx = 0

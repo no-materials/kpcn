@@ -724,6 +724,8 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse, 
 
         if double_fold:
 
+            x = tf.reshape(x, [-1, config.num_gt_points, 3])
+
             x = tf.concat([x, global_feat], axis=2)
 
             w = weight_variable([int(x.shape[1]), 512])
