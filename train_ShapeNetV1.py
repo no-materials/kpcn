@@ -2,6 +2,7 @@
 import time
 import os
 import argparse
+import numpy as np
 
 # Custom libs
 from utils.config import Config
@@ -166,8 +167,7 @@ if __name__ == '__main__':
                                      description="Train model on the ShapeNetV1 dataset", )
     parser.add_argument('--saving_path')
     parser.add_argument('--double_fold', action='store_true')
-    parser.add_argument('--snap', type=int)
-    parser.add_argument('--epoch', type=int)
+    parser.add_argument('--snap', type=int, help="index of snapshot to restore (-1 for latest snapshot)")
     args = parser.parse_args()
 
     ##########################
@@ -221,8 +221,16 @@ if __name__ == '__main__':
     model = KernelPointCompletionNetwork(dataset.flat_inputs, config, args.double_fold)
 
     # Trainer class
-    if args.saving_path is not None:
-        trainer = ModelTrainer(model, os.path.join(model.config.saving_path, 'snapshots/snap-%s' % str(args.snap)))
+    if args.saving_path is not None and args.snap is not None:
+        # Find all snapshot in the chosen training folder
+        snap_path = os.path.join(args.saving_path, 'snapshots')
+        snap_steps = [int(f[:-5].split('-')[-1]) for f in os.listdir(snap_path) if f[-5:] == '.meta']
+
+        # Find which snapshot to restore
+        chosen_step = np.sort(snap_steps)[args.snap]
+        chosen_snap = os.path.join(args.saving_path, 'snapshots', 'snap-{:d}'.format(chosen_step))
+
+        trainer = ModelTrainer(model, chosen_snap)
     else:
         trainer = ModelTrainer(model)
     t2 = time.time()
@@ -238,7 +246,11 @@ if __name__ == '__main__':
     print('Start Training')
     print('**************\n')
 
-    if args.snap is not None:
-        trainer.train(model, dataset, args.snap, args.epoch)
+    if args.saving_path is not None and args.snap is not None:
+        visu_path = os.path.join(args.saving_path, 'visu')
+        epoch = [int(f[:-4].split('_')[1]) for f in os.listdir(visu_path) if f[-5:] == '.png' and f[:-4].split('_')[-2] == str(chosen_step)][0]
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        print(epoch)
+        trainer.train(model, dataset, chosen_step, epoch)
     else:
         trainer.train(model, dataset)

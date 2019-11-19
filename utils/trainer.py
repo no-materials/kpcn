@@ -233,9 +233,7 @@ class ModelTrainer:
 
                 else:
                     # Run normal
-                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops,
-                                                                                                                   {
-                                                                                                                       model.dropout_prob: 0.5})
+                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops, {model.dropout_prob: 0.5})
 
                 t += [time.time()]
 
@@ -252,7 +250,7 @@ class ModelTrainer:
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
                     message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Fine_CD={:4.3f} ' \
-                              'Mixed_Loss={:4.3f} alpha={:08d} ---{:8.2f} ms/batch (Averaged)'
+                              'Mixed_Loss={:4.3f} alpha={:08d} ---{:8.2f} {:8.2f}ms/batch (Averaged)'
                     print(message.format(self.training_step,
                                          L_out,
                                          L_reg,
