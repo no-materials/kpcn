@@ -729,7 +729,7 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse, 
             x = tf.concat([x, global_feat], axis=2)
 
             w = weight_variable([int(x.shape[1]), 512])
-            x = conv_ops.unary_convolution(feat, w)
+            x = conv_ops.unary_convolution(x, w)
             x = leaky_relu(batch_norm(x,
                                       config.use_batch_norm,
                                       config.batch_norm_momentum,
