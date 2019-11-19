@@ -88,13 +88,11 @@ class ModelTrainer:
         # Name of the snapshot to restore to (None if you want to start from beginning)
         # restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-53444')
         if restore_snap is not None:
-            # TODO: change this when new head & loss is fully integrated
-            exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
-            restore_vars = my_vars
-            for exclude_var in exclude_vars:
-                restore_vars = [v for v in restore_vars if exclude_var not in v.name]
-            restorer = tf.train.Saver(restore_vars)
-            restorer.restore(self.sess, restore_snap)
+            # exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
+            # restore_vars = my_vars
+            # for exclude_var in exclude_vars:
+            #     restore_vars = [v for v in restore_vars if exclude_var not in v.name]
+            self.saver.restore(self.sess, restore_snap)
             print("Model restored.")
 
     def add_train_ops(self, model):
@@ -221,7 +219,8 @@ class ModelTrainer:
                        model.complete_points,
                        self.coarse_earth_mover,
                        self.fine_chamfer,
-                       self.mixed_loss]
+                       self.mixed_loss,
+                       model.alpha]
 
                 # If NaN appears in a training, use this debug block
                 if debug_NaN:
@@ -235,7 +234,7 @@ class ModelTrainer:
 
                 else:
                     # Run normal
-                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss = self.sess.run(ops, {
+                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops, {
                         model.dropout_prob: 0.5})
 
                 t += [time.time()]
@@ -253,7 +252,7 @@ class ModelTrainer:
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
                     message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Fine_CD={:4.3f} ' \
-                              'Mixed_Loss={:4.3f} ---{:8.2f} ms/batch (Averaged)'
+                              'Mixed_Loss={:4.3f} alpha={:08d} ---{:8.2f} ms/batch (Averaged)'
                     print(message.format(self.training_step,
                                          L_out,
                                          L_reg,
@@ -261,6 +260,7 @@ class ModelTrainer:
                                          coarse_em,
                                          fine_cd,
                                          mixed_loss,
+                                         alppha,
                                          1000 * mean_dt[0],
                                          1000 * mean_dt[1]))
 
