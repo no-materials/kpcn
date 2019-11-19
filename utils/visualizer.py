@@ -17,10 +17,6 @@ from os import makedirs, remove, rename, listdir
 from os.path import exists, join
 import time
 from mayavi import mlab
-from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
-import tensorflow.contrib.graph_editor as ge
 
 # PLY reader
 from utils.ply import write_ply, read_ply
@@ -413,25 +409,3 @@ class ModelVisualizer:
         return
 
 
-def plot_pc_compare_views(filename, pcs, titles, suptitle='', sizes=None, cmap='Reds', zdir='y',
-                        xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
-    if sizes is None:
-        sizes = [0.5 for i in range(len(pcs))]
-    fig = plt.figure(figsize=(len(pcs) * 3, 9))
-    for i in range(3):
-        elev = 30
-        azim = -45 + 90 * i
-        for j, (pc, size) in enumerate(zip(pcs, sizes)):
-            color = pc[:, 0]
-            ax = fig.add_subplot(3, len(pcs), i * len(pcs) + j + 1, projection='3d')
-            ax.view_init(elev, azim)
-            ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], zdir=zdir, c=color, s=size, cmap=cmap, vmin=-1, vmax=0.5)
-            ax.set_title(titles[j])
-            ax.set_axis_off()
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-            ax.set_zlim(zlim)
-    plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.9, wspace=0.1, hspace=0.1)
-    plt.suptitle(suptitle)
-    fig.savefig(filename)
-    plt.close(fig)

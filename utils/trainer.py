@@ -21,8 +21,6 @@ from os.path import exists, join
 import time
 import psutil
 import sys
-from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 # PLY reader
 from utils.ply import read_ply, write_ply
@@ -30,7 +28,8 @@ from utils.ply import read_ply, write_ply
 # Metrics
 from utils.metrics import chamfer, earth_mover
 
-from utils.visualizer import plot_pc_compare_views
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -234,8 +233,9 @@ class ModelTrainer:
 
                 else:
                     # Run normal
-                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops, {
-                        model.dropout_prob: 0.5})
+                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops,
+                                                                                                                   {
+                                                                                                                       model.dropout_prob: 0.5})
 
                 t += [time.time()]
 
@@ -469,7 +469,7 @@ class ModelTrainer:
                 fine_temp = pcs[2][0, :, :]
                 complete_temp = pcs[3][:model.config.num_gt_points, :]
                 final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
-                plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+                self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
     # Saving methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -529,3 +529,27 @@ class ModelTrainer:
                 np_name = '_'.join(v.name[:-2].split('/')[1:-1]) + '.npy'
                 np_file = join(kernels_dir, np_name)
                 np.save(np_file, kernel_weights)
+
+    @staticmethod
+    def plot_pc_compare_views(filename, pcs, titles, suptitle='', sizes=None, cmap='Reds', zdir='y',
+                              xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
+        if sizes is None:
+            sizes = [0.5 for i in range(len(pcs))]
+        fig = plt.figure(figsize=(len(pcs) * 3, 9))
+        for i in range(3):
+            elev = 30
+            azim = -45 + 90 * i
+            for j, (pc, size) in enumerate(zip(pcs, sizes)):
+                color = pc[:, 0]
+                ax = fig.add_subplot(3, len(pcs), i * len(pcs) + j + 1, projection='3d')
+                ax.view_init(elev, azim)
+                ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], zdir=zdir, c=color, s=size, cmap=cmap, vmin=-1, vmax=0.5)
+                ax.set_title(titles[j])
+                ax.set_axis_off()
+                ax.set_xlim(xlim)
+                ax.set_ylim(ylim)
+                ax.set_zlim(zlim)
+        plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.9, wspace=0.1, hspace=0.1)
+        plt.suptitle(suptitle)
+        fig.savefig(filename)
+        plt.close(fig)
