@@ -183,7 +183,7 @@ class ModelTrainer:
             # Training log file
             if not exists(join(model.saving_path, 'training.txt')):
                 with open(join(model.saving_path, 'training.txt'), "w") as file:
-                    file.write('Steps out_loss reg_loss point_loss coarse_EM fine_CD mixed_loss time memory\n')
+                    file.write('epoch steps out_loss reg_loss point_loss coarse_EM fine_CD mixed_loss time memory\n')
             # TODO: delete training.txt lines after snapshot
 
             # Killing file (simply delete this file when you want to stop the training)
@@ -247,7 +247,8 @@ class ModelTrainer:
 
                 else:
                     # Run normal
-                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = self.sess.run(ops,{model.dropout_prob: 0.5})
+                    _, L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = \
+                        self.sess.run(ops, {model.dropout_prob: 0.5})
 
                 t += [time.time()]
 
@@ -263,9 +264,10 @@ class ModelTrainer:
                 # Console display (only one per second)
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
-                    message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Fine_CD={:4.3f} ' \
-                              'Mixed_Loss={:4.3f} alpha={:5.3f} ---{:8.2f} {:8.2f}ms/batch (Averaged)'
-                    print(message.format(self.training_step,
+                    message = 'Epoch {:04d} / Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} ' \
+                              'Fine_CD={:4.3f} Mixed_Loss={:4.3f} alpha={:5.3f} ---{:8.2f} ms/batch (Averaged)'
+                    print(message.format(self.training_epoch,
+                                         self.training_step,
                                          L_out,
                                          L_reg,
                                          L_p,
@@ -280,8 +282,9 @@ class ModelTrainer:
                 if model.config.saving:
                     process = psutil.Process(os.getpid())
                     with open(join(model.saving_path, 'training.txt'), "a") as file:
-                        message = '{:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.2f} {:.1f}\n'
-                        file.write(message.format(self.training_step,
+                        message = '{:d} {:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.2f} {:.1f}\n'
+                        file.write(message.format(self.training_epoch,
+                                                  self.training_step,
                                                   L_out,
                                                   L_reg,
                                                   L_p,
@@ -458,16 +461,18 @@ class ModelTrainer:
             # Validation log file
             if not exists(join(model.saving_path, 'validation.txt')):
                 with open(join(model.saving_path, 'validation.txt'), "w") as file:
-                    file.write('Steps mean_coarse_EM mean_fine_CD mean_mixed_loss\n')
-                    message = '{:d} {:.3f} {:.3f} {:.3f}\n'
-                    file.write(message.format(self.training_step,
+                    file.write('epoch steps mean_coarse_EM mean_fine_CD mean_mixed_loss\n')
+                    message = '{:d} {:d} {:.3f} {:.3f} {:.3f}\n'
+                    file.write(message.format(self.training_epoch,
+                                              self.training_step,
                                               coarse_em_mean,
                                               fine_cd_mean,
                                               mixed_loss_mean))
             else:
                 with open(join(model.saving_path, 'validation.txt'), "a") as file:
-                    message = '{:d} {:.3f} {:.3f} {:.3f}\n'
-                    file.write(message.format(self.training_step,
+                    message = '{:d} {:d} {:.3f} {:.3f} {:.3f}\n'
+                    file.write(message.format(self.training_epoch,
+                                              self.training_step,
                                               coarse_em_mean,
                                               fine_cd_mean,
                                               mixed_loss_mean))
