@@ -205,6 +205,10 @@ class ModelTrainer:
         # Initialise iterator with train data
         self.sess.run(dataset.train_init_op)
 
+        if self.training_step in model.config.alpha_epoch:
+            op = model.alpha.assign(model.config.alphas[self.training_step])
+            self.sess.run(op)
+
         # Start loop
         while self.training_epoch < model.config.max_epoch:
             try:
