@@ -248,7 +248,7 @@ if __name__ == '__main__':
 
     if args.saving_path is not None and args.snap is not None:
         visu_path = os.path.join(args.saving_path, 'visu')
-        epoch = [int(f[:-4].split('_')[1]) for f in os.listdir(visu_path) if f[-5:] == '.png' and f[:-4].split('_')[-2] == str(chosen_step)][0]
+        epoch = [int(f[:-4].split('_')[1]) for f in os.listdir(visu_path) if f[-4:] == '.png' and f[:-4].split('_')[-2] == str(chosen_step)][0]
         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         print(epoch)
         trainer.train(model, dataset, chosen_step, epoch)
