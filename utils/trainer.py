@@ -473,8 +473,8 @@ class ModelTrainer:
                                               fine_cd_mean,
                                               mixed_loss_mean))
 
-            if not exists(join(model.saving_path, 'visu')):
-                makedirs(join(model.saving_path, 'visu'))
+            if not exists(join(model.saving_path, 'visu', 'valid')):
+                makedirs(join(model.saving_path, 'visu', 'valid'))
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
