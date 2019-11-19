@@ -247,10 +247,8 @@ if __name__ == '__main__':
     print('**************\n')
 
     if args.saving_path is not None and args.snap is not None:
-        visu_path = os.path.join(args.saving_path, 'visu')  # TODO: use valid visu path here
+        visu_path = os.path.join(args.saving_path, 'visu', 'valid')  # TODO: use valid visu path here
         epoch = [int(f.split('_')[1]) for f in os.listdir(visu_path) if f.split('_')[-2] == str(chosen_step - 1)][0]
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        print(epoch)
         trainer.train(model, dataset, chosen_step, epoch)
     else:
         trainer.train(model, dataset)

@@ -225,7 +225,7 @@ class ModelTrainer:
                 if debug_NaN:
                     all_values = self.sess.run(ops + [self.check_op] + list(dataset.flat_inputs),
                                                {model.dropout_prob: 0.5})
-                    L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss = all_values[1:7]
+                    L_out, L_reg, L_p, coarse, complete, coarse_em, fine_cd, mixed_loss, alppha = all_values[1:7]
                     if np.isnan(L_reg) or np.isnan(L_out):
                         input_values = all_values[8:]
                         self.debug_nan(model, input_values, coarse)
@@ -250,7 +250,7 @@ class ModelTrainer:
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
                     message = 'Step {:08d} L_out={:5.3f} L_reg={:5.3f} L_p={:5.3f} Coarse_EM={:4.3f} Fine_CD={:4.3f} ' \
-                              'Mixed_Loss={:4.3f} alpha={:08d} ---{:8.2f} {:8.2f}ms/batch (Averaged)'
+                              'Mixed_Loss={:4.3f} alpha={:5.3f} ---{:8.2f} {:8.2f}ms/batch (Averaged)'
                     print(message.format(self.training_step,
                                          L_out,
                                          L_reg,
