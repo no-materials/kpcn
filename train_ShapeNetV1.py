@@ -249,6 +249,7 @@ if __name__ == '__main__':
     if args.saving_path is not None and args.snap is not None:
         visu_path = os.path.join(args.saving_path, 'visu')
         print(chosen_step)
+        print([f for f in os.listdir(visu_path) if f.split('_')[-2] == str(chosen_step)])
         epoch = [int(f.split('_')[1]) for f in os.listdir(visu_path) if f.split('_')[-2] == str(chosen_step)][0]
         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         print(epoch)
