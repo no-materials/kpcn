@@ -126,7 +126,7 @@ class ShapeNetV1Config(Config):
     grad_clip_norm = 100.0
 
     # Number of batch
-    batch_num = 32
+    batch_num = 16
 
     # Number of steps per epochs (cannot be None for this dataset)
     epoch_steps = None
