@@ -73,7 +73,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
     # Initiation methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def __init__(self, batch_num, input_pts, input_threads=8):
+    def __init__(self, batch_num, input_pts, dataset_path, input_threads=8):
         """
         Initiation method.
         """
@@ -108,12 +108,14 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         ##########################
 
         # Path of the dataset src folder
-        self.dataset_path = '/Volumes/warm_blue/datasets/pc_shapenetCompletionBenchmark2048'
+        self.dataset_path = dataset_path
 
         # Path to preprocessed data folder
         self.data_path = join(dirname(dirname(realpath(__file__))),
                               'data',
                               'shapenetBenchmark2048')
+        if not exists(self.data_path):
+            makedirs(self.data_path)
 
         # Number of threads
         self.num_threads = input_threads
@@ -208,8 +210,8 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                     if subsampling_parameter > 0:
                         sub_partial_points = grid_subsampling(data[2].astype(np.float32),
                                                               sampleDl=subsampling_parameter)
-                        padded_sub_partial = pad_cloudN(sub_partial_points, self.input_pts)
-                        self.partial_points[split_type] += [padded_sub_partial]
+                        # padded_sub_partial = pad_cloudN(sub_partial_points, self.input_pts)
+                        self.partial_points[split_type] += [sub_partial_points]
                         self.complete_points[split_type] += [data[0]]
                         self.ids[split_type] += [data[1]]
                         # plot_pcds(None, [data[2], sub_partial_points], ['partial', 'gt'], use_color=[0, 0], color=[None, None])
@@ -251,7 +253,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
             self.potentials = {}
 
         # Reset potentials
-        self.potentials[split] = np.random.rand(len(self.categories[split])) * 1e-3
+        self.potentials[split] = np.random.rand(len(self.ids[split])) * 1e-3
 
         ################
         # Def generators
@@ -261,7 +263,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
             # Initiate concatenation lists
             tpp_list = []  # partial points
             tcp_list = []  # complete points
-            tcat_list = []  # categories
+            tid_list = []  # ids
             ti_list = []  # cloud index
             batch_n = 0
 
@@ -314,27 +316,26 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 n = new_partial_points.shape[0]  # num of points of selected partial point cloud
 
                 # Collect labels
-                input_category = self.categories[split][p_i]
+                input_category = self.ids[split][p_i]
 
                 # In case batch is full, yield it and reset it
-                # TODO: Currently I'm checking the partial cloud's batch limit, not the partial & complete's sum
                 if batch_n + n > self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
                            np.concatenate(tcp_list, axis=0),
-                           np.array(tcat_list, dtype=np.unicode_),
+                           np.array(tid_list, dtype=np.unicode_),
                            np.array(ti_list, dtype=np.int32),
                            np.array([tp.shape[0] for tp in tpp_list]),
                            np.array([tc.shape[0] for tc in tcp_list]))
                     tpp_list = []
                     tcp_list = []
-                    tcat_list = []
+                    tid_list = []
                     ti_list = []
                     batch_n = 0
 
                 # Add data to current batch
                 tpp_list += [new_partial_points]
                 tcp_list += [new_complete_points]
-                tcat_list += [input_category]
+                tid_list += [input_category]
                 ti_list += [p_i]
 
                 # Update batch size
@@ -342,7 +343,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             yield (np.concatenate(tpp_list, axis=0),
                    np.concatenate(tcp_list, axis=0),
-                   np.array(tcat_list, dtype=np.unicode_),
+                   np.array(tid_list, dtype=np.unicode_),
                    np.array(ti_list, dtype=np.int32),
                    np.array([tp.shape[0] for tp in tpp_list]),
                    np.array([tc.shape[0] for tc in tcp_list]))
@@ -503,6 +504,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                                                    batch_inds)
 
             # Add scale and rotation for testing
+            # TODO: pass ids
             input_list += [scales, rots, obj_inds, stacked_partial_lengths, stacked_complete_lengths]
 
             return input_list

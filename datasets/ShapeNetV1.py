@@ -146,6 +146,8 @@ class ShapeNetV1Dataset(Dataset):
         self.data_path = join(dirname(dirname(realpath(__file__))),
                               'data',
                               'shapenetV1')
+        if not exists(self.data_path):
+            makedirs(self.data_path)
 
         # Split file paths
         self.train_split_file = join(self.data_path, 'train.list')

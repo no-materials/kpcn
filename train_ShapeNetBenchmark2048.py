@@ -165,6 +165,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="Train model on the ShapeNetV1 dataset", )
     parser.add_argument('--saving_path')
+    parser.add_argument('--dataset_path')
     parser.add_argument('--double_fold', action='store_true')
     parser.add_argument('--snap', type=int, help="index of snapshot to restore (-1 for latest snapshot)")
     parser.add_argument('--dl0', type=float, default=0.02, help="subsampling grid parameter (zero or negative to skip)")
@@ -198,7 +199,7 @@ if __name__ == '__main__':
     print('*******************')
 
     # Create sub-sampled input clouds
-    dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points)
+    dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points, args.dataset_path)
     dl0 = args.dl0
     dataset.load_subsampled_clouds(dl0)
 
