@@ -418,8 +418,8 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                     batch_n = 0
 
                 # Add data to current batch
-                tpp_list += [self.partial_points[split][p_i]]
-                tcp_list += [self.complete_points[split][p_i]]
+                tpp_list += [self.partial_points[split][p_i].astype(np.float32)]
+                tcp_list += [self.complete_points[split][p_i].astype(np.float32)]
                 tid_list += [input_category]
                 ti_list += [p_i]
 
@@ -511,6 +511,136 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
         return tf_map
 
+    def check_input_pipeline_timing(self, config, model):
+
+        # Create a session for running Ops on the Graph.
+        cProto = tf.ConfigProto()
+        cProto.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=cProto)
+
+        # Init variables
+        self.sess.run(tf.global_variables_initializer())
+
+        # Initialise iterator with train data
+        self.sess.run(self.train_init_op)
+
+        # Run some epochs
+        n_b = config.batch_num
+        t0 = time.time()
+        mean_dt = np.zeros(2)
+        last_display = t0
+        epoch = 0
+        training_step = 0
+        while epoch < 100:
+
+            try:
+                # Run one step of the model.
+                t = [time.time()]
+                ops = [self.flat_inputs, model.coarse, model.bottleneck_features]
+
+                # Get next inputs
+                np_flat_inputs, coarse, output_features = self.sess.run(ops, {model.dropout_prob: 0.5})
+                t += [time.time()]
+
+                # Restructure flatten inputs
+                points = np_flat_inputs[:config.num_layers]
+                neighbors = np_flat_inputs[config.num_layers:2 * config.num_layers]
+                batches = np_flat_inputs[-7]
+                n_b = 0.99 * n_b + 0.01 * batches.shape[0]
+                t += [time.time()]
+
+                # Average timing
+                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+
+                # Console display
+                if (t[-1] - last_display) > 1.0:
+                    last_display = t[-1]
+                    message = 'Step {:08d} : timings {:4.2f} {:4.2f} - {:d} x {:d} => b = {:.1f}'
+                    print(message.format(training_step,
+                                         1000 * mean_dt[0],
+                                         1000 * mean_dt[1],
+                                         neighbors[0].shape[0],
+                                         neighbors[0].shape[1],
+                                         n_b))
+
+                training_step += 1
+
+            except tf.errors.OutOfRangeError:
+                print('End of train dataset')
+                self.sess.run(self.train_init_op)
+                epoch += 1
+
+        return
+
+
+    def check_input_pipeline_neighbors(self, config):
+
+        # Create a session for running Ops on the Graph.
+        cProto = tf.ConfigProto()
+        cProto.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=cProto)
+
+        # Init variables
+        self.sess.run(tf.global_variables_initializer())
+
+        # Initialise iterator with train data
+        self.sess.run(self.train_init_op)
+
+        # Run some epochs
+        hist_n = 500
+        neighb_hists = np.zeros((config.num_layers, hist_n), dtype=np.int32)
+        t0 = time.time()
+        mean_dt = np.zeros(2)
+        last_display = t0
+        epoch = 0
+        training_step = 0
+        while epoch < 100:
+
+            try:
+                # Run one step of the model.
+                t = [time.time()]
+                ops = self.flat_inputs
+
+                # Get next inputs
+                np_flat_inputs = self.sess.run(ops)
+                t += [time.time()]
+
+                # Restructure flatten inputs
+                points = np_flat_inputs[:config.num_layers]
+                neighbors = np_flat_inputs[config.num_layers:2 * config.num_layers]
+                batches = np_flat_inputs[-7]
+
+                for neighb_mat in neighbors:
+                    print(neighb_mat.shape)
+
+                counts = [np.sum(neighb_mat < neighb_mat.shape[0], axis=1) for neighb_mat in neighbors]
+                hists = [np.bincount(c, minlength=hist_n) for c in counts]
+
+                neighb_hists += np.vstack(hists)
+
+                print('***********************')
+                dispstr = ''
+                fmt_l = len(str(int(np.max(neighb_hists)))) + 1
+                for neighb_hist in neighb_hists:
+                    for v in neighb_hist:
+                        dispstr += '{num:{fill}{width}}'.format(num=v, fill=' ', width=fmt_l)
+                    dispstr += '\n'
+                print(dispstr)
+                print('***********************')
+
+                t += [time.time()]
+
+                # Average timing
+                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+
+                training_step += 1
+
+            except tf.errors.OutOfRangeError:
+                print('End of train dataset')
+                self.sess.run(self.train_init_op)
+                epoch += 1
+
+        return
 
 def plot_pcds(filename, pcds, titles, use_color=[], color=None, suptitle='', sizes=None, cmap='Reds', zdir='y',
               xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):

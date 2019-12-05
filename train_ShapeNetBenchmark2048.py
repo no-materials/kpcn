@@ -208,7 +208,7 @@ if __name__ == '__main__':
 
     # Test the input pipeline alone with this debug function
     # dataset.check_input_pipeline_timing(config, model)
-    # dataset.check_input_pipeline_neighbors(config)
+    dataset.check_input_pipeline_neighbors(config)
 
     ##############
     # Define Model
