@@ -10,7 +10,7 @@ from utils.trainer import ModelTrainer
 from models.KPCN_model import KernelPointCompletionNetwork
 
 # Dataset
-from datasets.ShapeNetV1 import ShapeNetV1Dataset
+from datasets.ShapeNetBenchmark2048 import ShapeNetBenchmark2048Dataset
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ from datasets.ShapeNetV1 import ShapeNetV1Dataset
 #
 
 
-class ShapeNetV1Config(Config):
+class ShapeNetBenchmark2048Config(Config):
     """
     Override the parameters you want to modify for this dataset
     """
@@ -30,7 +30,7 @@ class ShapeNetV1Config(Config):
     ####################
 
     # Dataset name
-    dataset = 'ShapeNetV1'
+    dataset = 'pc_shapenetCompletionBenchmark2048'
 
     # Number of categories in the dataset (This value is overwritten by dataset class when initiating input pipeline).
     num_categories = None
@@ -96,9 +96,9 @@ class ShapeNetV1Config(Config):
     batch_norm_momentum = 0.98
 
     # all partial clouds will be re-sampled to this hardcoded number
-    num_input_points = 3000
+    num_input_points = 2048
     # all complete clouds will be re-sampled to this hardcoded number
-    num_gt_points = 16384
+    num_gt_points = 2048
 
     # True if we want static number of points in clouds as well as batches
     per_cloud_batch = True
@@ -151,7 +151,6 @@ class ShapeNetV1Config(Config):
 
     # Do we nee to save convergence
     saving = True
-    # saving_path = '/content/drive/My Drive/kpcn/results/Log_2019-11-13_13-28-41'  # this is one fold
     saving_path = None
 
 
@@ -188,7 +187,7 @@ if __name__ == '__main__':
     # Load the model parameters
     ###########################
 
-    config = ShapeNetV1Config(args.saving_path)
+    config = ShapeNetBenchmark2048Config(args.saving_path)
 
     ##############
     # Prepare Data
@@ -199,7 +198,7 @@ if __name__ == '__main__':
     print('*******************')
 
     # Create sub-sampled input clouds
-    dataset = ShapeNetV1Dataset()
+    dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points)
     dl0 = args.dl0
     dataset.load_subsampled_clouds(dl0)
 

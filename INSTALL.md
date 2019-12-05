@@ -22,6 +22,9 @@
      - Open3D (for point cloud I/O)
      - bpy (for rendering depth images via blender)
      - OpenEXR & Imath
+     - h5py==2.9.0
+     - pandas==0.24.2
+     - transforms3d==0.3.1
      
 * Compile the customized Tensorflow operators located in `tf_custom_ops`. Open a terminal in this folder, and run:
 
