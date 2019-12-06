@@ -46,9 +46,9 @@ class Config:
     batch_norm_momentum = 0.99
 
     # all partial clouds will be re-sampled to this hardcoded number
-    num_input_points = 3000
+    num_input_points = 2048
     # all complete clouds will be re-sampled to this hardcoded number
-    num_gt_points = 16384
+    num_gt_points = 2048
 
     # True if we want static number of points in clouds as well as batches
     per_cloud_batch = True

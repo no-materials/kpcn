@@ -103,7 +103,7 @@ class ShapeNetBenchmark2048Config(Config):
     # True if we want static number of points in clouds as well as batches
     per_cloud_batch = True
 
-    num_coarse = 1024
+    num_coarse = 128  # 128 * 4 **2 = 2048 == num_gt_points (if I want more coarse points, maybe incr grid size...)
     grid_size = 4
     grid_scale = 0.05
     num_fine = grid_size ** 2 * num_coarse
