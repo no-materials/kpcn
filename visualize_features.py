@@ -87,7 +87,6 @@ def visu_caller(path, step_ind, relu_idx, compute_activations):
         # config.augment_noise = 0.0001
         # config.augment_symmetries = False
 
-        # TODO: remove these?...
         # config.batch_num = 3
         # config.in_radius = 4
         # config.validation_size = 200

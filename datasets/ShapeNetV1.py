@@ -333,7 +333,6 @@ class ShapeNetV1Dataset(Dataset):
                 input_category = self.categories[split][p_i]
 
                 # In case batch is full, yield it and reset it
-                # TODO: Currently I'm checking the partial cloud's batch limit, not the partial & complete's sum
                 if batch_n + n > self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
                            np.concatenate(tcp_list, axis=0),

@@ -669,7 +669,6 @@ class Dataset:
         ######################
         # Loop over the blocks
         ######################
-        # TODO: compare this codeblock with the respective one in KPConv's tf_segmentation input, since we use seg arch
         for block_i, block in enumerate(config.architecture):
 
             # Stop when meeting a global pooling or upsampling

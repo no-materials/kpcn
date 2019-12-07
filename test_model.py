@@ -77,8 +77,8 @@ def test_caller(path, step_ind, on_val):
         raise ValueError('Unsupported dataset : ' + config.dataset)
 
     # Create subsample clouds of the models
-    dl0 = config.first_subsampling_dl
-    dataset.load_subsampled_clouds(dl0)
+    dl0 = 0  # config.first_subsampling_dl
+    dataset.load_subsampled_clouds(dl0)  # TODO: careful dl0 is used here - padding?
 
     # Initialize input pipelines
     if on_val:

@@ -655,6 +655,8 @@ def coarse_head(features, config, dropout_prob):
                                          config.use_batch_norm,
                                          config.batch_norm_momentum,
                                          training))
+    # TODO: add one more fc layer here
+
     with tf.variable_scope('fc2'):
         w = weight_variable([1024, config.num_coarse * 3])
         features = leaky_relu(batch_norm(tf.matmul(features, w),
@@ -757,7 +759,6 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse, 
     return fine
 
 
-# TODO: test that alpha hyperparameter is actually changing...
 def completion_loss(coarse, fine, inputs, config, alpha):
     """
     Combines generated coarse and fine outputs' weighted distances for loss computation
