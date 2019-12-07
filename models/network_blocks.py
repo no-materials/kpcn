@@ -655,9 +655,13 @@ def coarse_head(features, config, dropout_prob):
                                          config.use_batch_norm,
                                          config.batch_norm_momentum,
                                          training))
-    # TODO: add one more fc layer here
-
     with tf.variable_scope('fc2'):
+        w = weight_variable([1024, 1024])
+        features = leaky_relu(batch_norm(tf.matmul(features, w),
+                                         config.use_batch_norm,
+                                         config.batch_norm_momentum,
+                                         training))
+    with tf.variable_scope('fc3'):
         w = weight_variable([1024, config.num_coarse * 3])
         features = leaky_relu(batch_norm(tf.matmul(features, w),
                                          config.use_batch_norm,
@@ -725,7 +729,6 @@ def assemble_decoder(inputs, config, dropout_prob, bottleneck_features, coarse, 
                        training)
 
         if double_fold:
-
             x = tf.reshape(x, [-1, config.num_gt_points, 3])
 
             x = tf.concat([x, global_feat], axis=2)
