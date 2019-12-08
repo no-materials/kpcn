@@ -152,7 +152,8 @@ class ShapeNetBenchmark2048Dataset(Dataset):
     def get_pair(self, fname, train):
         partial = load_h5(fname)
         if train == 'test':
-            gtpts = partial
+            # gtpts = partial
+            gtpts = load_h5(fname.replace('partial', 'gt'))
         else:
             gtpts = load_h5(fname.replace('partial', 'gt'))
         # if train:
