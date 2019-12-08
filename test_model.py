@@ -107,7 +107,10 @@ def test_caller(path, step_ind, on_val, dataset_path):
     snap_steps = [int(f[:-5].split('-')[-1]) for f in os.listdir(snap_path) if f[-5:] == '.meta']
 
     # Find which snapshot to restore
-    chosen_step = np.sort(snap_steps)[step_ind]
+    if step_ind == -1:
+        chosen_step = np.sort(snap_steps)[step_ind]
+    else:
+        chosen_step = step_ind
     chosen_snap = os.path.join(path, 'snapshots', 'snap-{:d}'.format(chosen_step))
 
     # Create a tester class
@@ -143,7 +146,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="Test model on the ShapeNetV1 dataset", )
     parser.add_argument('--saving_path', default='last_ShapeNetV1')
-    parser.add_argument('--snap', type=int, default=-1, help="index of snapshot to restore (-1 for latest snapshot)")
+    parser.add_argument('--snap', type=int, default=-1, help="snapshot to restore (-1 for latest snapshot)")
     parser.add_argument('--dataset_path')
     parser.add_argument('--double_fold', action='store_true')
     args = parser.parse_args()
