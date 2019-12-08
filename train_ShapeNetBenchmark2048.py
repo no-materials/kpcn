@@ -167,7 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('--saving_path')
     parser.add_argument('--dataset_path')
     parser.add_argument('--double_fold', action='store_true')
-    parser.add_argument('--snap', type=int, help="index of snapshot to restore (-1 for latest snapshot)")
+    parser.add_argument('--snap', type=int, help="snapshot to restore (-1 for latest snapshot)")
     parser.add_argument('--dl0', type=float, default=0.02, help="subsampling grid parameter (zero or negative to skip)")
     args = parser.parse_args()
 
@@ -228,7 +228,10 @@ if __name__ == '__main__':
         snap_steps = [int(f[:-5].split('-')[-1]) for f in os.listdir(snap_path) if f[-5:] == '.meta']
 
         # Find which snapshot to restore
-        chosen_step = np.sort(snap_steps)[args.snap]
+        if args.snap == -1:
+            chosen_step = np.sort(snap_steps)[args.snap]
+        else:
+            chosen_step = args.snap + 1
         chosen_snap = os.path.join(args.saving_path, 'snapshots', 'snap-{:d}'.format(chosen_step))
 
         trainer = ModelTrainer(model, chosen_snap)
