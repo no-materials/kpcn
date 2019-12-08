@@ -52,23 +52,21 @@ class ModelTrainer:
         my_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork')
         self.saver = tf.train.Saver(my_vars, max_to_keep=100)
 
-        """
         print('*************************************')
-        sum = 0
+        summ = 0
         for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='KernelPointNetwork'):
-            #print(var.name, var.shape)
-            sum += np.prod(var.shape)
-        print('total parameters : ', sum)
+            # print(var.name, var.shape)
+            summ += np.prod(var.shape)
+        print('total parameters : ', summ)
         print('*************************************')
 
         print('*************************************')
-        sum = 0
+        summ = 0
         for var in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork'):
-            #print(var.name, var.shape)
-            sum += np.prod(var.shape)
-        print('total parameters : ', sum)
+            # print(var.name, var.shape)
+            summ += np.prod(var.shape)
+        print('total parameters : ', summ)
         print('*************************************')
-        """
 
         # Create a session for running Ops on the Graph.
         # TODO: add auto check device
@@ -87,11 +85,12 @@ class ModelTrainer:
         # Name of the snapshot to restore to (None if you want to start from beginning)
         # restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-53444')
         if restore_snap is not None:
-            # exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
-            # restore_vars = my_vars
-            # for exclude_var in exclude_vars:
-            #     restore_vars = [v for v in restore_vars if exclude_var not in v.name]
-            self.saver.restore(self.sess, restore_snap)
+            exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
+            restore_vars = my_vars
+            for exclude_var in exclude_vars:
+                restore_vars = [v for v in restore_vars if exclude_var not in v.name]
+            restorer = tf.train.Saver(restore_vars)
+            restorer.restore(self.sess, restore_snap)
             print("Model restored.")
 
     def add_train_ops(self, model):
