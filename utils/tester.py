@@ -116,7 +116,6 @@ class ModelTester:
                 partial_points_list += [partial]
                 obj_inds += [inds]
 
-                print(len(obj_inds))
                 # Average timing
                 t += [time.time()]
                 mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
