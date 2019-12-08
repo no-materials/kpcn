@@ -110,7 +110,7 @@ def test_caller(path, step_ind, on_val, dataset_path):
     if step_ind == -1:
         chosen_step = np.sort(snap_steps)[step_ind]
     else:
-        chosen_step = step_ind
+        chosen_step = step_ind + 1
     chosen_snap = os.path.join(path, 'snapshots', 'snap-{:d}'.format(chosen_step))
 
     # Create a tester class
