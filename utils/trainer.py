@@ -92,6 +92,7 @@ class ModelTrainer:
             restorer = tf.train.Saver(restore_vars)
             restorer.restore(self.sess, restore_snap)
             print("Model restored.")
+            self.sess.run(tf.global_variables_initializer())
         else:
             self.sess.run(tf.global_variables_initializer())
 
