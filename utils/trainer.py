@@ -89,6 +89,7 @@ class ModelTrainer:
             restore_vars = my_vars
             for exclude_var in exclude_vars:
                 restore_vars = [v for v in restore_vars if exclude_var not in v.name]
+            print(restore_vars)
             restorer = tf.train.Saver(restore_vars)
             restorer.restore(self.sess, restore_snap)
             print("Model restored.")
