@@ -129,7 +129,7 @@ def test_caller(path, step_ind, on_val, dataset_path):
     print('**********\n')
 
     if config.dataset.startswith('ShapeNetV1') or config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
-        tester.test_completion(model, dataset)
+        tester.test_completion(model, dataset, on_val)
     else:
         raise ValueError('Unsupported dataset')
 
@@ -148,6 +148,7 @@ if __name__ == '__main__':
     parser.add_argument('--saving_path', default='last_ShapeNetV1')
     parser.add_argument('--snap', type=int, default=-1, help="snapshot to restore (-1 for latest snapshot)")
     parser.add_argument('--dataset_path')
+    parser.add_argument('--on_val', action='store_true')
     parser.add_argument('--double_fold', action='store_true')
     args = parser.parse_args()
 
@@ -170,12 +171,6 @@ if __name__ == '__main__':
     #
 
     chosen_snapshot = args.snap
-
-    #
-    #   Eventually, you can choose to test your model on the validation set
-    #
-
-    on_val = False
 
     #
     #   If you want to modify certain parameters in the Config class, for example, to stop augmenting the input data,
@@ -213,4 +208,4 @@ if __name__ == '__main__':
         raise ValueError('The given log does not exists: ' + chosen_log)
 
     # Let's go
-    test_caller(chosen_log, chosen_snapshot, on_val, args.dataset_path)
+    test_caller(chosen_log, chosen_snapshot, args.on_val, args.dataset_path)

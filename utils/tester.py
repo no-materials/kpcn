@@ -72,9 +72,15 @@ class ModelTester:
     # Test main methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def test_completion(self, model, dataset, num_votes=100):
-        # Initialise iterator with test data
-        self.sess.run(dataset.test_init_op)
+    def test_completion(self, model, dataset, on_val, num_votes=100):
+
+        # Initialise iterator with data
+        if on_val:
+            self.sess.run(dataset.val_init_op)
+            cardinal = dataset.num_valid
+        else:
+            self.sess.run(dataset.test_init_op)
+            cardinal = dataset.num_test
 
         mean_dt = np.zeros(2)
         last_display = time.time()
@@ -118,7 +124,7 @@ class ModelTester:
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
                     message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
-                    print(message.format(100 * len(obj_inds) / dataset.num_test,
+                    print(message.format(100 * len(obj_inds) / cardinal,
                                          1000 * (mean_dt[0]),
                                          1000 * (mean_dt[1])))
 
