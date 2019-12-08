@@ -94,7 +94,7 @@ def test_caller(path, step_ind, on_val):
     print('**************\n')
     t1 = time.time()
 
-    if config.dataset.startswith('ShapeNetV1'):
+    if config.dataset.startswith('ShapeNetV1') or config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
         model = KernelPointCompletionNetwork(dataset.flat_inputs, config, args.double_fold)
     else:
         raise ValueError('Unsupported dataset : ' + config.dataset)
@@ -122,7 +122,7 @@ def test_caller(path, step_ind, on_val):
     print('Start Test')
     print('**********\n')
 
-    if config.dataset.startswith('ShapeNetV1'):
+    if config.dataset.startswith('ShapeNetV1') or config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
         tester.test_completion(model, dataset)
     else:
         raise ValueError('Unsupported dataset')

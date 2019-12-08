@@ -139,8 +139,8 @@ class ModelTester:
             coarse_em_mean))
 
         if model.config.saving:
-            if not exists(join(model.saving_path, 'visu')):
-                makedirs(join(model.saving_path, 'visu'))
+            if not exists(join(model.saving_path, 'visu', 'test')):
+                makedirs(join(model.saving_path, 'visu', 'test'))
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
