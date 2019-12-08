@@ -143,6 +143,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="Test model on the ShapeNetV1 dataset", )
     parser.add_argument('--saving_path', default='last_ShapeNetV1')
+    parser.add_argument('--snap', type=int, default=-1, help="index of snapshot to restore (-1 for latest snapshot)")
     parser.add_argument('--dataset_path')
     parser.add_argument('--double_fold', action='store_true')
     args = parser.parse_args()
@@ -165,7 +166,7 @@ if __name__ == '__main__':
     #   You can also choose the index of the snapshot to load (last by default)
     #
 
-    chosen_snapshot = -1
+    chosen_snapshot = args.snap
 
     #
     #   Eventually, you can choose to test your model on the validation set

@@ -76,13 +76,6 @@ class ModelTester:
         # Initialise iterator with test data
         self.sess.run(dataset.test_init_op)
 
-        # Number of classes predicted by the model
-        nc_model = model.config.num_classes
-
-        # Initiate votes
-        average_probs = np.zeros((len(dataset.input_labels['test']), nc_model))
-        average_counts = np.zeros((len(dataset.input_labels['test']), nc_model))
-
         mean_dt = np.zeros(2)
         last_display = time.time()
 
