@@ -80,7 +80,7 @@ class ModelTrainer:
         self.sess = tf.Session(config=cProto)
 
         # Init variables
-        self.sess.run(tf.local_variables_initializer())
+        self.sess.run(tf.global_variables_initializer())
 
         # Name of the snapshot to restore to (None if you want to start from beginning)
         # restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-53444')
