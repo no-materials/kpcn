@@ -21,6 +21,7 @@ from models.KPCN_model import KernelPointCompletionNetwork
 
 # Datasets
 from datasets.ShapeNetV1 import ShapeNetV1Dataset
+from datasets.ShapeNetBenchmark2048 import ShapeNetBenchmark2048Dataset
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -29,7 +30,7 @@ from datasets.ShapeNetV1 import ShapeNetV1Dataset
 #       \***********************/
 #
 
-def test_caller(path, step_ind, on_val):
+def test_caller(path, step_ind, on_val, dataset_path):
     ##########################
     # Initiate the environment
     ##########################
@@ -73,6 +74,8 @@ def test_caller(path, step_ind, on_val):
     # Initiate dataset configuration
     if config.dataset.startswith('ShapeNetV1'):
         dataset = ShapeNetV1Dataset()
+    elif config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
+        dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points, dataset_path)
     else:
         raise ValueError('Unsupported dataset : ' + config.dataset)
 
@@ -140,6 +143,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="Test model on the ShapeNetV1 dataset", )
     parser.add_argument('--saving_path', default='last_ShapeNetV1')
+    parser.add_argument('--dataset_path')
     parser.add_argument('--double_fold', action='store_true')
     args = parser.parse_args()
 
@@ -205,4 +209,4 @@ if __name__ == '__main__':
         raise ValueError('The given log does not exists: ' + chosen_log)
 
     # Let's go
-    test_caller(chosen_log, chosen_snapshot, on_val)
+    test_caller(chosen_log, chosen_snapshot, on_val, args.dataset_path)
