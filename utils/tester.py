@@ -104,7 +104,7 @@ class ModelTester:
                 t = [time.time()]
                 ops = (self.coarse_earth_mover, self.fine_chamfer, model.coarse, model.fine, model.complete_points,
                        model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'])
-                coarse_em, fine_cd, coarse, fine, complete, partial, inds, ids = self.sess.run(ops, {
+                coarse_em, fine_cd, coarse, fine, complete, partial, inds, idss = self.sess.run(ops, {
                     model.dropout_prob: 1.0})
                 t += [time.time()]
 
@@ -116,7 +116,7 @@ class ModelTester:
                 complete_points_list += [complete]
                 partial_points_list += [partial]
                 obj_inds += [inds]
-                ids_list += [ids]
+                ids_list += [idss]
 
                 # Average timing
                 t += [time.time()]
