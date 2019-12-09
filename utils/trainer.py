@@ -45,6 +45,20 @@ class ModelTrainer:
 
     def __init__(self, model, restore_snap=None):
 
+        # Create a session for running Ops on the Graph.
+        # TODO: add auto check device
+        on_CPU = False
+        # on_CPU = True
+        if on_CPU:
+            cProto = tf.ConfigProto(device_count={'GPU': 0})
+        else:
+            cProto = tf.ConfigProto()
+            cProto.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=cProto)
+
+        # Init variables
+        self.sess.run(tf.global_variables_initializer())
+
         # Add training ops
         self.add_train_ops(model)
 
@@ -68,19 +82,6 @@ class ModelTrainer:
         print('total parameters : ', summ)
         print('*************************************')
 
-        # Create a session for running Ops on the Graph.
-        # TODO: add auto check device
-        on_CPU = False
-        # on_CPU = True
-        if on_CPU:
-            cProto = tf.ConfigProto(device_count={'GPU': 0})
-        else:
-            cProto = tf.ConfigProto()
-            cProto.gpu_options.allow_growth = True
-        self.sess = tf.Session(config=cProto)
-
-        # Init variables
-        self.sess.run(tf.global_variables_initializer())
 
         # Name of the snapshot to restore to (None if you want to start from beginning)
         # restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-53444')
