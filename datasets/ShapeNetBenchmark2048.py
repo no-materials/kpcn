@@ -444,11 +444,11 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None, 1], [None], [None], [None])
+                [None, 3], [None, 3], [None], [None], [None], [None])
         else:
             used_gen = dynamic_batch_point_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None, 1], [None], [None], [None])
+                [None, 3], [None, 3], [None], [None], [None], [None])
 
         return used_gen, gen_types, gen_shapes
 
