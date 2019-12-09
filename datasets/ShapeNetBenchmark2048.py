@@ -408,7 +408,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 if batch_n >= self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
                            np.concatenate(tcp_list, axis=0),
-                           np.array(tid for tid in tid_list),
+                           np.array((tid for tid in tid_list), np.unicode_),
                            np.array(ti_list, dtype=np.int32),
                            np.array([tp.shape[0] for tp in tpp_list]),
                            np.array([tc.shape[0] for tc in tcp_list]))
@@ -421,7 +421,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 # Add data to current batch
                 tpp_list += [self.partial_points[split][p_i].astype(np.float32)]
                 tcp_list += [self.complete_points[split][p_i].astype(np.float32)]
-                tid_list += [input_category.astype(np.unicode)]
+                tid_list += [input_category]
                 ti_list += [p_i]
 
                 # Update batch size
@@ -429,7 +429,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             yield (np.concatenate(tpp_list, axis=0),
                    np.concatenate(tcp_list, axis=0),
-                   np.array(tid for tid in tid_list),
+                   np.array((tid for tid in tid_list), np.unicode_),
                    np.array(ti_list, dtype=np.int32),
                    np.array([tp.shape[0] for tp in tpp_list]),
                    np.array([tc.shape[0] for tc in tcp_list]))
