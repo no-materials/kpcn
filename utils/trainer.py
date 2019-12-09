@@ -51,6 +51,7 @@ class ModelTrainer:
         # Tensorflow Saver definition
         my_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork')
         # self.saver = tf.train.Saver(my_vars, max_to_keep=100)
+        tf.reset_default_graph()
         self.saver = tf.train.Saver()
 
         print('*************************************')
