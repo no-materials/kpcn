@@ -146,7 +146,7 @@ class ModelTester:
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
             for i, id_str in enumerate(ids_list[0]):
-                plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_str.replace("'", ".").split(".")[1])
+                plot_path = join(model.saving_path, 'visu', 'test', b'%s.png' % id_str.replace("'", ".").split(".")[1])
                 if not exists(plot_path):
                     makedirs(plot_path)
                 pcs = [x[i] for x in all_pcs]
