@@ -96,14 +96,15 @@ class ModelTester:
         complete_points_list = []
         partial_points_list = []
         obj_inds = []
+        ids_list = []
 
         while True:
             try:
                 # Run one step of the model.
                 t = [time.time()]
                 ops = (self.coarse_earth_mover, self.fine_chamfer, model.coarse, model.fine, model.complete_points,
-                       model.inputs['points'], model.inputs['object_inds'])
-                coarse_em, fine_cd, coarse, fine, complete, partial, inds = self.sess.run(ops, {
+                       model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'])
+                coarse_em, fine_cd, coarse, fine, complete, partial, inds, ids = self.sess.run(ops, {
                     model.dropout_prob: 1.0})
                 t += [time.time()]
 
@@ -115,6 +116,7 @@ class ModelTester:
                 complete_points_list += [complete]
                 partial_points_list += [partial]
                 obj_inds += [inds]
+                ids_list += [ids]
 
                 # Average timing
                 t += [time.time()]
@@ -143,8 +145,8 @@ class ModelTester:
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
-            for i in range(0, len(coarse_list), 20):
-                plot_path = join(model.saving_path, 'visu', 'test', '%d.png' % i)  # TODO: add ids as plot filename
+            for i, id_str in enumerate(ids_list):
+                plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_str)
                 pcs = [x[i] for x in all_pcs]
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]

@@ -506,7 +506,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             # Add scale and rotation for testing
             # TODO: pass ids
-            input_list += [scales, rots, obj_inds, stacked_partial_lengths, stacked_complete_lengths]
+            input_list += [scales, rots, obj_inds, stacked_partial_lengths, stacked_complete_lengths, ids]
 
             return input_list
 

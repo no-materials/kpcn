@@ -567,7 +567,7 @@ class ShapeNetV1Dataset(Dataset):
                 # Restructure flatten inputs
                 points = np_flat_inputs[:config.num_layers]
                 neighbors = np_flat_inputs[config.num_layers:2 * config.num_layers]
-                batches = np_flat_inputs[-7]
+                batches = np_flat_inputs[-8]
                 n_b = 0.99 * n_b + 0.01 * batches.shape[0]
                 t += [time.time()]
 
@@ -629,7 +629,7 @@ class ShapeNetV1Dataset(Dataset):
                 # Restructure flatten inputs
                 points = np_flat_inputs[:config.num_layers]
                 neighbors = np_flat_inputs[config.num_layers:2 * config.num_layers]
-                batches = np_flat_inputs[-7]
+                batches = np_flat_inputs[-8]
 
                 for neighb_mat in neighbors:
                     print(neighb_mat.shape)
