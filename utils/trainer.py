@@ -84,19 +84,19 @@ class ModelTrainer:
 
         # Name of the snapshot to restore to (None if you want to start from beginning)
         # restore_snap = os.path.join(model.config.saving_path, 'snapshots/snap-53444')
-        if restore_snap is not None:
-            exclude_vars = ['softmax', 'head_unary_conv', 'fc']
-            restore_vars = my_vars
-            for exclude_var in exclude_vars:
-                restore_vars = [v for v in restore_vars if exclude_var not in v.name]
-            print(restore_vars)
-            restorer = tf.train.Saver(restore_vars)
-            restorer.restore(self.sess, restore_snap)
-            print("Model restored.")
-
         # if restore_snap is not None:
-        #     self.saver.restore(self.sess, restore_snap)
-        #     print("Model restored from " + restore_snap)
+        #     exclude_vars = ['softmax', 'head_unary_conv', '/fc/']
+        #     restore_vars = my_vars
+        #     for exclude_var in exclude_vars:
+        #         restore_vars = [v for v in restore_vars if exclude_var not in v.name]
+        #     print(restore_vars)
+        #     restorer = tf.train.Saver(restore_vars)
+        #     restorer.restore(self.sess, restore_snap)
+        #     print("Model restored.")
+
+        if restore_snap is not None:
+            self.saver.restore(self.sess, restore_snap)
+            print("Model restored from " + restore_snap)
 
     def add_train_ops(self, model):
         """
