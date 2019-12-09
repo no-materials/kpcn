@@ -421,7 +421,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 # Add data to current batch
                 tpp_list += [self.partial_points[split][p_i].astype(np.float32)]
                 tcp_list += [self.complete_points[split][p_i].astype(np.float32)]
-                tid_list += [input_category]
+                tid_list += [input_category[0]]
                 ti_list += [p_i]
 
                 # Update batch size
