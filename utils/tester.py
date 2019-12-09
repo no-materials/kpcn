@@ -116,7 +116,7 @@ class ModelTester:
                 complete_points_list += [complete]
                 partial_points_list += [partial]
                 obj_inds += [inds]
-                ids_list += idss
+                ids_list += [idss]
 
                 # Average timing
                 t += [time.time()]
