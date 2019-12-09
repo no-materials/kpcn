@@ -145,10 +145,7 @@ class ModelTester:
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
-            print(ids_list)
-            print("ok")
-            print(ids_list[0])
-            for i, id_str in enumerate(ids_list):
+            for i, id_str in enumerate(ids_list[0]):
                 plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_str)
                 pcs = [x[i] for x in all_pcs]
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
