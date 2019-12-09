@@ -50,7 +50,8 @@ class ModelTrainer:
 
         # Tensorflow Saver definition
         my_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork')
-        self.saver = tf.train.Saver(my_vars, max_to_keep=100)
+        # self.saver = tf.train.Saver(my_vars, max_to_keep=100)
+        self.saver = tf.train.Saver()
 
         print('*************************************')
         summ = 0
@@ -121,30 +122,26 @@ class ModelTrainer:
             if model.config.grad_clip_norm > 0:
 
                 # Get gradient for deformable convolutions and scale them
-                # scaled_gvs = []
-                # for grad, var in gvs:
-                #     if 'offset_conv' in var.name:
-                #         scaled_gvs.append((0.1 * grad, var))
-                #     if 'offset_mlp' in var.name:
-                #         scaled_gvs.append((0.1 * grad, var))
-                #     else:
-                #         scaled_gvs.append((grad, var))
-                #
-                # # Clipping each gradient independantly
-                # capped_gvs = [(tf.clip_by_norm(grad, model.config.grad_clip_norm), var) for grad, var in scaled_gvs]
-                #
-                # # Clipping the whole network gradient (problematic with big network where grad == inf)
-                # # capped_grads, global_norm = tf.clip_by_global_norm([grad for grad, var in gvs], self.config.grad_clip_norm)
-                # # vars = [var for grad, var in gvs]
-                # # capped_gvs = [(grad, var) for grad, var in zip(capped_grads, vars)]
-                #
-                # extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-                # with tf.control_dependencies(extra_update_ops):
-                #     self.train_op = optimizer.apply_gradients(capped_gvs)
+                scaled_gvs = []
+                for grad, var in gvs:
+                    if 'offset_conv' in var.name:
+                        scaled_gvs.append((0.1 * grad, var))
+                    if 'offset_mlp' in var.name:
+                        scaled_gvs.append((0.1 * grad, var))
+                    else:
+                        scaled_gvs.append((grad, var))
+
+                # Clipping each gradient independantly
+                capped_gvs = [(tf.clip_by_norm(grad, model.config.grad_clip_norm), var) for grad, var in scaled_gvs]
+
+                # Clipping the whole network gradient (problematic with big network where grad == inf)
+                # capped_grads, global_norm = tf.clip_by_global_norm([grad for grad, var in gvs], self.config.grad_clip_norm)
+                # vars = [var for grad, var in gvs]
+                # capped_gvs = [(grad, var) for grad, var in zip(capped_grads, vars)]
 
                 extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
                 with tf.control_dependencies(extra_update_ops):
-                    self.train_op = optimizer.apply_gradients(gvs)
+                    self.train_op = optimizer.apply_gradients(capped_gvs)
 
             else:
                 extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
