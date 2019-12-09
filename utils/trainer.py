@@ -50,14 +50,12 @@ class ModelTrainer:
 
         # Tensorflow Saver definition
         my_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork')
-        # self.saver = tf.train.Saver(my_vars, max_to_keep=100)
-        tf.reset_default_graph()
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(my_vars, max_to_keep=100)
 
         print('*************************************')
         summ = 0
         for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='KernelPointNetwork'):
-            # print(var.name, var.shape)
+            print(var.name, var.shape)
             summ += np.prod(var.shape)
         print('total parameters : ', summ)
         print('*************************************')
@@ -65,7 +63,7 @@ class ModelTrainer:
         print('*************************************')
         summ = 0
         for var in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork'):
-            # print(var.name, var.shape)
+            print(var.name, var.shape)
             summ += np.prod(var.shape)
         print('total parameters : ', summ)
         print('*************************************')
