@@ -13,7 +13,7 @@
 import tensorflow as tf
 import numpy as np
 from os import makedirs
-from os.path import exists, join
+from os.path import exists, join, dirname
 import time
 
 # PLY reader
@@ -146,9 +146,9 @@ class ModelTester:
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
             for i, id_str in enumerate(ids_list[0]):
-                plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_str)
-                if not exists(plot_path):
-                    makedirs(plot_path)
+                plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_str.decode().split(".")[0])
+                if not exists(dirname(plot_path)):
+                    makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
