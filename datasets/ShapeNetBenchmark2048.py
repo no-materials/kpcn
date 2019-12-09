@@ -408,7 +408,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 if batch_n >= self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
                            np.concatenate(tcp_list, axis=0),
-                           np.array(tid_list, dtype=np.unicode_),
+                           np.concatenate(tid_list, axis=0),
                            np.array(ti_list, dtype=np.int32),
                            np.array([tp.shape[0] for tp in tpp_list]),
                            np.array([tc.shape[0] for tc in tcp_list]))
@@ -421,7 +421,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 # Add data to current batch
                 tpp_list += [self.partial_points[split][p_i].astype(np.float32)]
                 tcp_list += [self.complete_points[split][p_i].astype(np.float32)]
-                tid_list += [input_category[0].astype(np.unicode_)]
+                tid_list += [input_category.astype(np.unicode_)]
                 ti_list += [p_i]
 
                 # Update batch size
@@ -429,7 +429,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             yield (np.concatenate(tpp_list, axis=0),
                    np.concatenate(tcp_list, axis=0),
-                   np.array(tid_list, dtype=np.unicode_),
+                   np.concatenate(tid_list, axis=0),
                    np.array(ti_list, dtype=np.int32),
                    np.array([tp.shape[0] for tp in tpp_list]),
                    np.array([tc.shape[0] for tc in tcp_list]))
@@ -444,11 +444,11 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None], [None], [None], [None])
+                [None, 3], [None, 3], [None, 1], [None], [None], [None])
         else:
             used_gen = dynamic_batch_point_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None], [None], [None], [None])
+                [None, 3], [None, 3], [None, 1], [None], [None], [None])
 
         return used_gen, gen_types, gen_shapes
 
@@ -573,7 +573,6 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
         return
 
-
     def check_input_pipeline_neighbors(self, config):
 
         # Create a session for running Ops on the Graph.
@@ -642,6 +641,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 epoch += 1
 
         return
+
 
 def plot_pcds(filename, pcds, titles, use_color=[], color=None, suptitle='', sizes=None, cmap='Reds', zdir='y',
               xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
