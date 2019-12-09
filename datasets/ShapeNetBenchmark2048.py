@@ -323,7 +323,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 if batch_n + n > self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
                            np.concatenate(tcp_list, axis=0),
-                           np.array(tid_list, dtype=np.unicode_),
+                           np.array(tid_list),
                            np.array(ti_list, dtype=np.int32),
                            np.array([tp.shape[0] for tp in tpp_list]),
                            np.array([tc.shape[0] for tc in tcp_list]))
@@ -336,7 +336,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 # Add data to current batch
                 tpp_list += [new_partial_points]
                 tcp_list += [new_complete_points]
-                tid_list += [input_category]
+                tid_list += [input_category[0]]
                 ti_list += [p_i]
 
                 # Update batch size
@@ -344,7 +344,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             yield (np.concatenate(tpp_list, axis=0),
                    np.concatenate(tcp_list, axis=0),
-                   np.array(tid_list, dtype=np.unicode_),
+                   np.array(tid_list),
                    np.array(ti_list, dtype=np.int32),
                    np.array([tp.shape[0] for tp in tpp_list]),
                    np.array([tc.shape[0] for tc in tcp_list]))
@@ -444,11 +444,11 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None, 1], [None], [None], [None])
+                [None, 3], [None, 3], [None], [None], [None], [None])
         else:
             used_gen = dynamic_batch_point_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None, 1], [None], [None], [None])
+                [None, 3], [None, 3], [None], [None], [None], [None])
 
         return used_gen, gen_types, gen_shapes
 
