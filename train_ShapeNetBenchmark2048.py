@@ -120,7 +120,7 @@ class ShapeNetBenchmark2048Config(Config):
     alpha_epoch = [1, 50, 200, 400]
 
     # Learning rate management
-    learning_rate = 1e-2
+    learning_rate = 0.05e-2  # start at 1e-2 and after 200 epochs reduced to 0.0005
     momentum = 0.98
     lr_decays = {i: 0.1 ** (1 / 80) for i in range(1, max_epoch)}
     grad_clip_norm = 100.0
