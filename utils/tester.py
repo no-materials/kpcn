@@ -145,8 +145,78 @@ class ModelTester:
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
-            for i, id_batch_np in enumerate(ids_list):  # TODO: fix wrong ids...
+            for i, id_batch_np in enumerate(ids_list):
                 plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_batch_np[0].decode().split(".")[0])
+                if not exists(dirname(plot_path)):
+                    makedirs(dirname(plot_path))
+                pcs = [x[i] for x in all_pcs]
+                partial_temp = pcs[0][0][:model.config.num_input_points, :]
+                coarse_temp = pcs[1][0, :, :]
+                fine_temp = pcs[2][0, :, :]
+                complete_temp = pcs[3][:model.config.num_gt_points, :]
+                final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
+                self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+
+        return
+
+    def test_kitti_completion(self, model, dataset):
+
+        # Initialise iterator with data
+        self.sess.run(dataset.test_init_op)
+        cardinal = dataset.num_cars
+
+        mean_dt = np.zeros(2)
+        last_display = time.time()
+
+        # Run model on all test examples
+        # ******************************
+
+        # Initiate result containers
+        coarse_list = []
+        fine_list = []
+        partial_points_list = []
+        obj_inds = []
+        ids_list = []
+
+        while True:
+            try:
+                # Run one step of the model.
+                t = [time.time()]
+                ops = (
+                    model.coarse, model.fine, model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'])
+                coarse, fine, partial, inds, idss = self.sess.run(ops, {model.dropout_prob: 1.0})
+                t += [time.time()]
+
+                # Get results and append to list
+                coarse_list += [coarse]
+                fine_list += [fine]
+                partial_points_list += [partial]
+                obj_inds += [inds]
+                ids_list += [idss]
+
+                # Average timing
+                t += [time.time()]
+                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+
+                # Display
+                if (t[-1] - last_display) > 1.0:
+                    last_display = t[-1]
+                    message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                    print(message.format(100 * len(obj_inds) / cardinal,
+                                         1000 * (mean_dt[0]),
+                                         1000 * (mean_dt[1])))
+
+            except tf.errors.OutOfRangeError:
+                break
+
+        if model.config.saving:
+            if not exists(join(model.saving_path, 'visu', 'kitti')):
+                makedirs(join(model.saving_path, 'visu', 'kitti'))
+
+            all_pcs = [partial_points_list, coarse_list, fine_list]
+            visualize_titles = ['input', 'coarse output', 'fine output']
+            for i, id_batch_np in enumerate(ids_list):
+                plot_path = join(model.saving_path, 'visu', 'kitti', '%s.png' % id_batch_np[0].decode().split(".")[0])
                 if not exists(dirname(plot_path)):
                     makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]

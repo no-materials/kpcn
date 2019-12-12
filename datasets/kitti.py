@@ -4,6 +4,7 @@ import time
 import json
 import pickle
 from sklearn.neighbors import KDTree
+import open3d as o3d
 
 try:
     from urllib.request import urlretrieve
@@ -65,9 +66,9 @@ def grid_subsampling(points, features=None, labels=None, sampleDl=0.1, verbose=0
 #
 
 
-class ShapeNetBenchmark2048Dataset(Dataset):
+class KittiDataset(Dataset):
     """
-    ShapeNetBenchmark2048 dataset for completion task.
+    Kitti dataset for completion task.
     """
 
     # Initiation methods
@@ -77,7 +78,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         """
         Initiation method.
         """
-        Dataset.__init__(self, 'pc_shapenetCompletionBenchmark2048')
+        Dataset.__init__(self, 'kitti')
 
         self.synset_to_category = {
             '02691156': 'Airplane',
@@ -98,9 +99,8 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         # Number of models
         self.network_model = 'completion'
 
-        # Partial, complete point clouds & categories used for each split
+        # Partial, ids used for each car
         self.partial_points = {}
-        self.complete_points = {}
         self.ids = {}
 
         ##########################
@@ -113,7 +113,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         # Path to preprocessed data folder
         self.data_path = join(dirname(dirname(realpath(__file__))),
                               'data',
-                              'shapenetBenchmark2048')
+                              'kitti')
         if not exists(self.data_path):
             makedirs(self.data_path)
 
@@ -122,51 +122,17 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
         self.input_pts = input_pts
 
-        # Load classmaps
-        classmap = load_csv(join(self.dataset_path, 'synsetoffset2category.txt'))
-        self.classmap = {}
-        for i in range(classmap.shape[0]):
-            self.classmap[str(classmap[i][1]).zfill(8)] = classmap[i][0]
+        self.pcd_dir = join(self.dataset_path, 'cars')
+        self.bbox_dir = join(self.dataset_path, 'bboxes')
+        self.tracklets_dir = join(self.dataset_path, 'tracklets')
 
-        # Split file paths lists
-        self.train_split_file = join(self.dataset_path, 'train.list')
-        self.valid_split_file = join(self.dataset_path, 'val.list')
-        self.test_split_file = join(self.dataset_path, 'test.list')
+        self.num_cars = 2401  # TODO: fix hardcoded value
 
-        # Split data paths
-        self.train_data_paths = sorted([join(self.dataset_path, 'train', 'partial', k.rstrip() + '.h5') for k in
-                                        open(self.train_split_file).readlines()])
-        self.val_data_paths = sorted([join(self.dataset_path, 'val', 'partial', k.rstrip() + '.h5') for k in
-                                      open(self.valid_split_file).readlines()])
-        self.test_data_paths = sorted([join(self.dataset_path, 'test', 'partial', k.rstrip() + '.h5') for k in
-                                       open(self.test_split_file).readlines()])
-
-        # make datasets dividable by batch num and set num of splits
-        self.num_train = int(len(self.train_data_paths) / batch_num) * batch_num  # 28974
-        self.train_data_paths = self.train_data_paths[0:self.num_train]
-        self.num_valid = int(len(self.val_data_paths) / batch_num) * batch_num  # 800
-        self.val_data_paths = self.val_data_paths[0:self.num_valid]
-        self.num_test = int(len(self.test_data_paths) / batch_num) * batch_num  # 1184
-        self.test_data_paths = self.test_data_paths[0:self.num_test]
-
-    def get_pair(self, fname, train):
-        partial = load_h5(fname)
-        if train == 'test':
-            gtpts = partial
-            # gtpts = load_h5(fname.replace('partial', 'gt'))
-        else:
-            gtpts = load_h5(fname.replace('partial', 'gt'))
-        # if train:
-        #     gtpts, partial = augment_cloud([gtpts, partial], args)
-        # partial = pad_cloudN(partial, 2048)
-        return partial, gtpts
-
-    def load_data(self, fname, split):
-        pair = self.get_pair(fname, train=split)
-        partial = pair[0]
-        target = pair[1]
-        cloud_meta = ['{}.{:d}'.format('/'.join(fname.split('/')[-2:]), 0), ]
-        return target, cloud_meta, partial
+    def load_cloud(self, fname):
+        pcd = o3d.io.read_point_cloud(join(self.pcd_dir, fname))
+        partial_cloud = np.array(pcd.points)
+        cloud_meta = '{}'.format(fname.split('/')[-1])
+        return partial_cloud, cloud_meta,
 
     def load_subsampled_clouds(self, subsampling_parameter):
         """
@@ -176,62 +142,64 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         if 0 < subsampling_parameter <= 0.01:
             raise ValueError('subsampling_parameter too low (should be over 1 cm')
 
-        self.partial_points = {'train': [], 'valid': [], 'test': []}
-        self.complete_points = {'train': [], 'valid': [], 'test': []}
-        self.ids = {'train': [], 'valid': [], 'test': []}
+        self.partial_points = {'test': []}
+        self.ids = {'test': []}
 
-        for split_type in ['train', 'valid', 'test']:
+        split_type = 'test'
 
-            # Restart timer
-            t0 = time.time()
+        # Restart timer
+        t0 = time.time()
 
-            # Load wanted points if possible
-            print('\nLoading %s points' % split_type)
-            filename = join(self.data_path, '{0:s}_{1:.3f}_record.pkl'.format(split_type, subsampling_parameter))
+        # Load wanted points if possible
+        print('\nLoading %s points' % split_type)
+        filename = join(self.data_path, '{0:s}_{1:.3f}_record.pkl'.format(split_type, subsampling_parameter))
 
-            if exists(filename):
-                with open(filename, 'rb') as file:
-                    self.partial_points[split_type], \
-                    self.complete_points[split_type], \
-                    self.ids[split_type] = pickle.load(file)
+        if exists(filename):
+            with open(filename, 'rb') as file:
+                self.partial_points[split_type], \
+                self.ids[split_type] = pickle.load(file)
 
-            # Else compute them from original points
-            else:
-                if split_type == 'train':
-                    paths = self.train_data_paths
-                elif split_type == 'valid':
-                    paths = self.val_data_paths
+        # Else compute them from original points
+        else:
+
+            for file_iter, file_path in enumerate([f for f in listdir(self.pcd_dir) if f.endswith('.pcd')]):
+                # Call loading functions
+                data = self.load_cloud(file_path)
+                bbox = np.loadtxt(join(self.bbox_dir, '%s.txt' % file_path.split('.')[0]))
+
+                # Normalize clouds, calculate center, rotation and scale
+                center = (bbox.min(0) + bbox.max(0)) / 2
+                bbox -= center
+                yaw = np.arctan2(bbox[3, 1] - bbox[0, 1], bbox[3, 0] - bbox[0, 0])
+                rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                                     [np.sin(yaw), np.cos(yaw), 0],
+                                     [0, 0, 1]])
+                bbox = np.dot(bbox, rotation)
+                scale = bbox[3, 0] - bbox[0, 0]
+                bbox /= scale
+
+                partial = np.dot(data[0] - center, rotation) / scale
+                partial = np.dot(partial, [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
+
+                if subsampling_parameter > 0:
+                    sub_partial_points = grid_subsampling(partial.astype(np.float32),
+                                                          sampleDl=subsampling_parameter)
+                    padded_sub_partial = pad_cloudN(sub_partial_points, self.input_pts)
+                    self.partial_points[split_type] += [padded_sub_partial]
+                    self.ids[split_type] += [data[1]]
+                    # plot_pcds(None, [partial], ['partial'], use_color=[0], color=[None])
                 else:
-                    paths = self.test_data_paths
+                    padded_partial = pad_cloudN(partial, self.input_pts)
+                    self.partial_points[split_type] += [padded_partial]
+                    self.ids[split_type] += [data[1]]
+                    # plot_pcds(None, [partial, padded_partial], ['partial', 'padded'], use_color=[0, 0], color=[None, None])
 
-                for file_iter, file_path in enumerate(paths):
-                    # Call loading functions
-                    data = self.load_data(file_path, split_type)
-
-                    if subsampling_parameter > 0:
-                        sub_partial_points = grid_subsampling(data[2].astype(np.float32),
-                                                              sampleDl=subsampling_parameter)
-                        # padded_sub_partial = pad_cloudN(sub_partial_points, self.input_pts)
-                        self.partial_points[split_type] += [sub_partial_points]
-                        self.complete_points[split_type] += [data[0]]
-                        self.ids[split_type] += [data[1]]
-                        # plot_pcds(None, [data[2], sub_partial_points], ['partial', 'gt'], use_color=[0, 0], color=[None, None])
-
-                    else:
-                        # padded_partial = pad_cloudN(data[2], self.input_pts)
-                        self.partial_points[split_type] += [data[2]]
-                        self.complete_points[split_type] += [data[0]]
-                        self.ids[split_type] += [data[1]]
-                        # plot_pcds(None, [data[2], data[0]], ['partial', 'gt'], use_color=[0, 0], color=[None, None])
-
-                # Save split pickle for later use
-                with open(filename, 'wb') as file:
-                    pickle.dump((self.partial_points[split_type],
-                                 self.complete_points[split_type],
-                                 self.ids[split_type]), file)
+            # Save split pickle for later use
+            with open(filename, 'wb') as file:
+                pickle.dump((self.partial_points[split_type],
+                             self.ids[split_type]), file)
 
             lengths = [p.shape[0] for p in self.partial_points[split_type]]
-            lengths.extend([p.shape[0] for p in self.complete_points[split_type]])
             sizes = [l * 4 * 3 for l in lengths]
             print('{:.1f} MB loaded in {:.1f}s'.format(np.sum(sizes) * 1e-6, time.time() - t0))
 
@@ -263,44 +231,15 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             # Initiate concatenation lists
             tpp_list = []  # partial points
-            tcp_list = []  # complete points
             tid_list = []  # ids
             ti_list = []  # cloud index
             batch_n = 0
 
             # Initiate parameters depending on the chosen split
-            if split == 'train':
-                if balanced:
-                    pick_n = int(np.ceil(self.num_train / self.num_classes))
-                    gen_indices = []
-                    for l in self.label_values:
-                        label_inds = np.where(np.equal(self.input_labels[split], l))[0]
-                        rand_inds = np.random.choice(label_inds, size=pick_n, replace=True)
-                        gen_indices += [rand_inds]
-                    gen_indices = np.random.permutation(np.hstack(gen_indices))
-                else:
-                    gen_indices = np.random.permutation(self.num_train)
-
-            elif split == 'valid':
+            if split == 'test':
 
                 # Get indices with the minimum potential
-                val_num = min(self.num_test, config.validation_size * config.batch_num)
-                if val_num < self.potentials[split].shape[0]:
-                    gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
-                else:
-                    gen_indices = np.random.permutation(val_num)
-
-                # Update potentials
-                self.potentials[split][gen_indices] += 1.0
-
-            elif split == 'test':
-
-                # Get indices with the minimum potential
-                val_num = min(self.num_test, config.validation_size * config.batch_num)
-                if val_num < self.potentials[split].shape[0]:
-                    gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
-                else:
-                    gen_indices = np.random.permutation(val_num)
+                gen_indices = np.random.permutation(self.num_cars)
 
                 # Update potentials
                 self.potentials[split][gen_indices] += 1.0
@@ -313,7 +252,6 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
                 # Get points
                 new_partial_points = self.partial_points[split][p_i].astype(np.float32)
-                new_complete_points = self.complete_points[split][p_i].astype(np.float32)
                 n = new_partial_points.shape[0]  # num of points of selected partial point cloud
 
                 # Collect labels
@@ -322,20 +260,16 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 # In case batch is full, yield it and reset it
                 if batch_n + n > self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
-                           np.concatenate(tcp_list, axis=0),
                            np.array(tid_list),
                            np.array(ti_list, dtype=np.int32),
-                           np.array([tp.shape[0] for tp in tpp_list]),
-                           np.array([tc.shape[0] for tc in tcp_list]))
+                           np.array([tp.shape[0] for tp in tpp_list]))
                     tpp_list = []
-                    tcp_list = []
                     tid_list = []
                     ti_list = []
                     batch_n = 0
 
                 # Add data to current batch
                 tpp_list += [new_partial_points]
-                tcp_list += [new_complete_points]
                 tid_list += [input_category[0]]
                 ti_list += [p_i]
 
@@ -343,54 +277,23 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                 batch_n += n
 
             yield (np.concatenate(tpp_list, axis=0),
-                   np.concatenate(tcp_list, axis=0),
                    np.array(tid_list),
                    np.array(ti_list, dtype=np.int32),
-                   np.array([tp.shape[0] for tp in tpp_list]),
-                   np.array([tc.shape[0] for tc in tcp_list]))
+                   np.array([tp.shape[0] for tp in tpp_list]))
 
         def static_batch_cloud_based_gen():
 
             # Initiate concatenation lists
             tpp_list = []  # partial points
-            tcp_list = []  # complete points
             tid_list = []  # categories
             ti_list = []  # cloud index
             batch_n = 0
 
             # Initiate parameters depending on the chosen split
-            if split == 'train':
-                if balanced:
-                    pick_n = int(np.ceil(self.num_train / self.num_classes))
-                    gen_indices = []
-                    for l in self.label_values:
-                        label_inds = np.where(np.equal(self.input_labels[split], l))[0]
-                        rand_inds = np.random.choice(label_inds, size=pick_n, replace=True)
-                        gen_indices += [rand_inds]
-                    gen_indices = np.random.permutation(np.hstack(gen_indices))
-                else:
-                    gen_indices = np.random.permutation(self.num_train)
-
-            elif split == 'valid':
+            if split == 'test':
 
                 # Get indices with the minimum potential
-                val_num = min(self.num_test, config.validation_size * config.batch_num)
-                if val_num < self.potentials[split].shape[0]:
-                    gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
-                else:
-                    gen_indices = np.random.permutation(val_num)
-
-                # Update potentials
-                self.potentials[split][gen_indices] += 1.0
-
-            elif split == 'test':
-
-                # Get indices with the minimum potential
-                val_num = min(self.num_test, config.validation_size * config.batch_num)
-                if val_num < self.potentials[split].shape[0]:
-                    gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
-                else:
-                    gen_indices = np.random.permutation(val_num)
+                gen_indices = np.random.permutation(self.num_cars)
 
                 # Update potentials
                 self.potentials[split][gen_indices] += 1.0
@@ -402,110 +305,88 @@ class ShapeNetBenchmark2048Dataset(Dataset):
             for p_i in gen_indices:
 
                 # Collect ids
-                input_category = self.ids[split][p_i]
+                input_id = self.ids[split][p_i]
 
                 # In case batch is full, yield it and reset it
                 if batch_n >= self.batch_limit and batch_n > 0:
                     yield (np.concatenate(tpp_list, axis=0),
-                           np.concatenate(tcp_list, axis=0),
                            np.array(tid_list, dtype=np.object),
                            np.array(ti_list, dtype=np.int32),
-                           np.array([tp.shape[0] for tp in tpp_list]),
-                           np.array([tc.shape[0] for tc in tcp_list]))
+                           np.array([tp.shape[0] for tp in tpp_list]))
                     tpp_list = []
-                    tcp_list = []
                     tid_list = []
                     ti_list = []
                     batch_n = 0
 
                 # Add data to current batch
                 tpp_list += [self.partial_points[split][p_i].astype(np.float32)]
-                tcp_list += [self.complete_points[split][p_i].astype(np.float32)]
-                tid_list += [input_category[0]]
+                tid_list += [input_id]
                 ti_list += [p_i]
 
                 # Update batch size
                 batch_n += 1
 
             yield (np.concatenate(tpp_list, axis=0),
-                   np.concatenate(tcp_list, axis=0),
                    np.array(tid_list, dtype=np.object),
                    np.array(ti_list, dtype=np.int32),
-                   np.array([tp.shape[0] for tp in tpp_list]),
-                   np.array([tc.shape[0] for tc in tcp_list]))
+                   np.array([tp.shape[0] for tp in tpp_list]))
 
         ##################
         # Return generator
         ##################
 
         # Generator types and shapes
-        gen_types = (tf.float32, tf.float32, tf.string, tf.int32, tf.int32, tf.int32)
+        gen_types = (tf.float32, tf.string, tf.int32, tf.int32)
 
         if config.per_cloud_batch:
             used_gen = static_batch_cloud_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None], [None], [None], [None])
+                [None, 3], [None], [None], [None])
         else:
             used_gen = dynamic_batch_point_based_gen
             gen_shapes = (
-                [None, 3], [None, 3], [None], [None], [None], [None])
+                [None, 3], [None], [None], [None])
 
         return used_gen, gen_types, gen_shapes
 
     def get_tf_mapping(self, config):
 
-        def tf_map(stacked_partial, stacked_complete, ids, obj_inds, stacked_partial_lengths,
-                   stacked_complete_lengths):
+        def tf_map(stacked_partial, ids, obj_inds, stacked_partial_lengths):
             """
             From the input point cloud, this function compute all the point clouds at each layer, the neighbors
             indices, the pooling indices and other useful variables.
             :param stacked_partial: Tensor with size [None, 3] where None is the total number of points
-            :param stacked_complete: Tensor with size [None, 3] where None is the total number of points
-            :param categories: Tensor with size [None] where None is the number of batch
+            :param ids: Tensor with size [None] where None is the number of batch
             :param obj_inds: Tensor with size [None] where None is the number of batch
             :param stacked_partial_lengths: Tensor with size [None] where None is the number of batch
-            :param stacked_complete_lengths: Tensor with size [None] where None is the number of batch
             """
 
             # Get batch index for each point: [3, 2, 5] --> [0, 0, 0, 1, 1, 2, 2, 2, 2, 2] (but with larger sizes...)
             batch_inds = self.tf_get_batch_inds(stacked_partial_lengths)
 
-            # Augment input points
-            # TODO: SHOULD I AUGMENT THE DATA?
-            stacked_points, scales, rots = self.tf_augment_input(stacked_partial,
-                                                                 batch_inds,
-                                                                 config)
+            scales = None
+            rots = None
 
-            # First add a column of 1 as feature for the network to be able to learn 3D shapes
-            # if config.per_cloud_batch:
-            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], config.num_input_points, 1), dtype=tf.float32)
-            # else:
-            #     stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
-
-            stacked_features = tf.ones((tf.shape(stacked_points)[0], 1), dtype=tf.float32)
+            stacked_features = tf.ones((tf.shape(stacked_partial)[0], 1), dtype=tf.float32)
 
             # Then use positions or not
             if config.in_features_dim == 1:
                 pass
             elif config.in_features_dim == 4:
-                # stacked_features = tf.concat((stacked_features, stacked_points),
-                #                              axis=2 if config.per_cloud_batch else 1)
-                stacked_features = tf.concat((stacked_features, stacked_points), axis=1)
-            elif config.in_features_dim == 7:
-                stacked_features = tf.concat((stacked_features, stacked_points, stacked_complete), axis=1)
+                stacked_features = tf.concat((stacked_features, stacked_partial), axis=1)
             else:
-                raise ValueError('Only accepted input dimensions are 1, 4 and 7 (without and with XYZ)')
+                raise ValueError('Only accepted input dimensions are 1, and 4 (without and with XYZ)')
 
             # Get the whole input list
             input_list = self.tf_completion_inputs(config,
-                                                   stacked_points,
+                                                   stacked_partial,
                                                    stacked_features,
-                                                   stacked_complete,
+                                                   None,
                                                    stacked_partial_lengths,
                                                    batch_inds)
 
             # Add scale and rotation for testing
-            input_list += [scales, rots, obj_inds, stacked_partial_lengths, stacked_complete_lengths, ids]
+            input_list += [scales, rots, obj_inds, stacked_partial_lengths, tf.zeros((0, 1), dtype=tf.int32), ids]
 
             return input_list
 
@@ -646,7 +527,7 @@ def plot_pcds(filename, pcds, titles, use_color=[], color=None, suptitle='', siz
               xlim=(-0.3, 0.3), ylim=(-0.3, 0.3), zlim=(-0.3, 0.3)):
     if sizes is None:
         sizes = [5 for i in range(len(pcds))]
-    fig = plt.figure(figsize=(len(pcds) * 3, 3))
+    fig = plt.figure(figsize=(len(pcds) * 3, 1))
     for i in range(1):
         elev = 30
         azim = -45 + 90 * i

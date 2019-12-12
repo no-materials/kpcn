@@ -113,7 +113,7 @@ class ShapeNetBenchmark2048Config(Config):
     #####################
 
     # Maximal number of epochs
-    max_epoch = 500
+    max_epoch = 1000
 
     # Hyperparameter alpha for distance loss weighting
     alphas = [0.01, 0.1, 0.5, 1.0]

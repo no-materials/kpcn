@@ -755,6 +755,10 @@ class Dataset:
         # list of network inputs
         li = input_points + input_neighbors + input_pools + input_upsamples
         li += [stacked_features, stacked_weights, stacked_batch_inds_0, stacked_batch_inds_1]
-        li += [stacked_complete]
+
+        if stacked_complete is not None:
+            li += [stacked_complete]
+        else:  # kitti dataset case, use dummy tensor for GT
+            li += [tf.zeros((0, 1), dtype=tf.int32)]  # dummy for kitti complete points (kitti has no GT)
 
         return li
