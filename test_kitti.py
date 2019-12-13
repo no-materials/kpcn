@@ -117,6 +117,7 @@ if __name__ == '__main__':
     parser.add_argument('--saving_path', help="model_log_file_path")
     parser.add_argument('--snap', type=int, default=-1, help="snapshot to restore (-1 for latest snapshot)")
     parser.add_argument('--dataset_path')
+    parser.add_argument('--double_fold', action='store_true')
     args = parser.parse_args()
 
     chosen_log = args.saving_path
