@@ -104,15 +104,15 @@ class ModelTester:
                 t = [time.time()]
                 ops = (self.coarse_earth_mover, self.fine_chamfer, model.coarse, model.fine, model.complete_points,
                        model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'])
-                coarse_em, fine_cd, coarse, fine, complete, partial, inds, idss = self.sess.run(ops, {
+                coarse_em, fine_cd, coarsee, finee, complete, partial, inds, idss = self.sess.run(ops, {
                     model.dropout_prob: 1.0})
                 t += [time.time()]
 
                 # Get distances and obj_indexes
                 coarse_em_list += [coarse_em]
                 fine_cd_list += [fine_cd]
-                coarse_list += [coarse]
-                fine_list += [fine]
+                coarse_list += [coarsee]
+                fine_list += [finee]
                 complete_points_list += [complete]
                 partial_points_list += [partial]
                 obj_inds += [inds]
