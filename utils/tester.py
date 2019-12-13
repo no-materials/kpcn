@@ -135,7 +135,7 @@ class ModelTester:
 
         coarse_em_mean = np.mean(coarse_em_list)
         fine_cd_mean = np.mean(fine_cd_list)
-        print('Test distances\nMean (Fine) Chamfer: {:4.3f}\tMean (Coarse) Earth Mover: {:4.3f}'.format(
+        print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
             fine_cd_mean,
             coarse_em_mean))
 
@@ -143,8 +143,6 @@ class ModelTester:
             if not exists(join(model.saving_path, 'visu', 'test')):
                 makedirs(join(model.saving_path, 'visu', 'test'))
 
-            print(coarse_em_list)
-            print('Mean', coarse_em_mean)
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             all_dist = [coarse_em_list, fine_cd_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
@@ -154,8 +152,7 @@ class ModelTester:
                     makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]
                 dists = [d[i] for d in all_dist]
-                print(dists)
-                suptitle = 'Coarse EMD = %d / Fine CD = %d' % (dists[0][0], dists[1][0])
+                suptitle = 'Coarse EMD = %d / Fine CD = %d' % (dists[0], dists[1])
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
                 fine_temp = pcs[2][0, :, :]
