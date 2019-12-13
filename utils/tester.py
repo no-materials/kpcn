@@ -144,18 +144,21 @@ class ModelTester:
                 makedirs(join(model.saving_path, 'visu', 'test'))
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
+            all_dist = [coarse_em_list, fine_cd_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
             for i, id_batch_np in enumerate(ids_list):
                 plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_batch_np[0].decode().split(".")[0])
                 if not exists(dirname(plot_path)):
                     makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]
+                dists = [d[i] for d in all_dist]
+                suptitle = 'Coarse EMD = %d / Fine CD = %d' % (dists[0][0], dists[1][0])
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
                 fine_temp = pcs[2][0, :, :]
                 complete_temp = pcs[3][:model.config.num_gt_points, :]
                 final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
-                self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+                self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
 
         return
 
