@@ -385,8 +385,9 @@ class KittiDataset(Dataset):
                                                    stacked_partial_lengths,
                                                    batch_inds)
 
-            # Add scale and rotation for testing
-            input_list += [scales, rots, obj_inds, stacked_partial_lengths, tf.zeros((0, 1), dtype=tf.int32), ids]
+            # Add dummy scale and rotation for testing
+            input_list += [tf.zeros((0, 1), dtype=tf.int32), tf.zeros((0, 1), dtype=tf.int32), obj_inds,
+                           stacked_partial_lengths, tf.zeros((0, 1), dtype=tf.int32), ids]
 
             return input_list
 
