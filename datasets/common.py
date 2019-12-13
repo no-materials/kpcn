@@ -542,7 +542,7 @@ class Dataset:
             else:
                 split = 'test'
         else:
-            if self.partial_points['train'] is not None and len(self.partial_points['train']) > 0:
+            if 'train' in self.partial_points and len(self.partial_points['train']) > 0:
                 split = 'train'
             else:
                 split = 'test'
