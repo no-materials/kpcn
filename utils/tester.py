@@ -223,8 +223,7 @@ class ModelTester:
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
                 fine_temp = pcs[2][0, :, :]
-                complete_temp = pcs[3][:model.config.num_gt_points, :]
-                final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
+                final_pcs = [partial_temp, coarse_temp, fine_temp]
                 self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
         return
