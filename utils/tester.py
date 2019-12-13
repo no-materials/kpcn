@@ -143,6 +143,8 @@ class ModelTester:
             if not exists(join(model.saving_path, 'visu', 'test')):
                 makedirs(join(model.saving_path, 'visu', 'test'))
 
+            print(coarse_em_list)
+            print('Mean', coarse_em_mean)
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             all_dist = [coarse_em_list, fine_cd_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
