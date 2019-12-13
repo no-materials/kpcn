@@ -152,6 +152,7 @@ class ModelTester:
                     makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]
                 dists = [d[i] for d in all_dist]
+                print(dists)
                 suptitle = 'Coarse EMD = %d / Fine CD = %d' % (dists[0][0], dists[1][0])
                 partial_temp = pcs[0][0][:model.config.num_input_points, :]
                 coarse_temp = pcs[1][0, :, :]
