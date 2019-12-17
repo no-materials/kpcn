@@ -238,25 +238,25 @@ class ModelTester:
                 final_pcs = [partial_temp, coarse_temp, fine_temp]
                 self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
-                # # Save pcd
-                # # Calculate center, rotation and scale
-                # bbox = np.loadtxt(join(dataset.bbox_dir, '%s.txt' % car_id))
-                # center = (bbox.min(0) + bbox.max(0)) / 2
-                # bbox -= center
-                # yaw = np.arctan2(bbox[3, 1] - bbox[0, 1], bbox[3, 0] - bbox[0, 0])
-                # rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0],
-                #                      [np.sin(yaw), np.cos(yaw), 0],
-                #                      [0, 0, 1]])
-                # bbox = np.dot(bbox, rotation)
-                # scale = bbox[3, 0] - bbox[0, 0]
-                # bbox /= scale
-                #
-                # completion_w = np.dot(fine_temp[0, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
-                # completion_w = np.dot(completion_w * scale, rotation.T) + center
-                # pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
-                # if not exists(dirname(pcd_path)):
-                #     makedirs(dirname(pcd_path))
-                # self.save_pcd(pcd_path, completion_w)
+                # Save pcd
+                # Calculate center, rotation and scale
+                bbox = np.loadtxt(join(dataset.bbox_dir, '%s.txt' % car_id))
+                center = (bbox.min(0) + bbox.max(0)) / 2
+                bbox -= center
+                yaw = np.arctan2(bbox[3, 1] - bbox[0, 1], bbox[3, 0] - bbox[0, 0])
+                rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                                     [np.sin(yaw), np.cos(yaw), 0],
+                                     [0, 0, 1]])
+                bbox = np.dot(bbox, rotation)
+                scale = bbox[3, 0] - bbox[0, 0]
+                bbox /= scale
+
+                completion_w = np.dot(fine_temp[0, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
+                completion_w = np.dot(completion_w * scale, rotation.T) + center
+                pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
+                if not exists(dirname(pcd_path)):
+                    makedirs(dirname(pcd_path))
+                self.save_pcd(pcd_path, completion_w)
 
         return
 

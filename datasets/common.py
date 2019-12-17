@@ -759,6 +759,6 @@ class Dataset:
         if stacked_complete is not None:
             li += [stacked_complete]
         else:  # kitti dataset case, use dummy tensor for GT
-            li += [tf.zeros((0, 1), dtype=tf.int32)]  # dummy for kitti complete points (kitti has no GT)
+            li += [tf.zeros((0, 1), dtype=tf.float32)]  # dummy for kitti complete points (kitti has no GT)
 
         return li
