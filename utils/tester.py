@@ -225,38 +225,40 @@ class ModelTester:
             all_pcs = [partial_points_list, coarse_list, fine_list]
             visualize_titles = ['input', 'coarse output', 'fine output']
             for i, id_batch_np in enumerate(ids_list):
-                car_id = id_batch_np[0].decode().split(".")[0]
+                for batch_el_idx in range(dataset.batch_num):
 
-                # Plot
-                plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
-                if not exists(dirname(plot_path)):
-                    makedirs(dirname(plot_path))
-                pcs = [x[i] for x in all_pcs]
-                partial_temp = pcs[0][0][:model.config.num_input_points, :]
-                coarse_temp = pcs[1][0, :, :]
-                fine_temp = pcs[2][0, :, :]
-                final_pcs = [partial_temp, coarse_temp, fine_temp]
-                self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+                    car_id = id_batch_np[batch_el_idx].decode().split(".")[0]
 
-                # Save pcd
-                # Calculate center, rotation and scale
-                bbox = np.loadtxt(join(dataset.bbox_dir, '%s.txt' % car_id))
-                center = (bbox.min(0) + bbox.max(0)) / 2
-                bbox -= center
-                yaw = np.arctan2(bbox[3, 1] - bbox[0, 1], bbox[3, 0] - bbox[0, 0])
-                rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0],
-                                     [np.sin(yaw), np.cos(yaw), 0],
-                                     [0, 0, 1]])
-                bbox = np.dot(bbox, rotation)
-                scale = bbox[3, 0] - bbox[0, 0]
-                bbox /= scale
+                    # Plot
+                    plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
+                    if not exists(dirname(plot_path)):
+                        makedirs(dirname(plot_path))
+                    pcs = [x[i] for x in all_pcs]
+                    partial_temp = pcs[0][batch_el_idx][:model.config.num_input_points, :]
+                    coarse_temp = pcs[1][batch_el_idx, :, :]
+                    fine_temp = pcs[2][batch_el_idx, :, :]
+                    final_pcs = [partial_temp, coarse_temp, fine_temp]
+                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
-                completion_w = np.dot(fine_temp, [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
-                completion_w = np.dot(completion_w * scale, rotation.T) + center
-                pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
-                if not exists(dirname(pcd_path)):
-                    makedirs(dirname(pcd_path))
-                self.save_pcd(pcd_path, completion_w)
+                    # Save pcd
+                    # Calculate center, rotation and scale
+                    bbox = np.loadtxt(join(dataset.bbox_dir, '%s.txt' % car_id))
+                    center = (bbox.min(0) + bbox.max(0)) / 2
+                    bbox -= center
+                    yaw = np.arctan2(bbox[3, 1] - bbox[0, 1], bbox[3, 0] - bbox[0, 0])
+                    rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                                         [np.sin(yaw), np.cos(yaw), 0],
+                                         [0, 0, 1]])
+                    bbox = np.dot(bbox, rotation)
+                    scale = bbox[3, 0] - bbox[0, 0]
+                    bbox /= scale
+
+                    completion_w = np.dot(fine_temp, [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
+                    completion_w = np.dot(completion_w * scale, rotation.T) + center
+                    pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
+                    if not exists(dirname(pcd_path)):
+                        makedirs(dirname(pcd_path))
+                    self.save_pcd(pcd_path, completion_w)
 
         return
 

@@ -117,6 +117,8 @@ class KittiDataset(Dataset):
         if not exists(self.data_path):
             makedirs(self.data_path)
 
+        self.batch_num = batch_num
+
         # Number of threads
         self.num_threads = input_threads
 
