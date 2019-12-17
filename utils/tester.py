@@ -251,7 +251,7 @@ class ModelTester:
                 scale = bbox[3, 0] - bbox[0, 0]
                 bbox /= scale
 
-                completion_w = np.dot(fine_temp[0, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
+                completion_w = np.dot(fine_temp, [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
                 completion_w = np.dot(completion_w * scale, rotation.T) + center
                 pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
                 if not exists(dirname(pcd_path)):
