@@ -227,7 +227,7 @@ class ModelTester:
             for i, id_batch_np in enumerate(ids_list):
                 for batch_el_idx in range(dataset.batch_num):
 
-                    car_id = id_batch_np[batch_el_idx].decode().split(".")[0]
+                    car_id = id_batch_np[0].decode().split(".")[0]
                     pcs = [x[i] for x in all_pcs]
 
                     # Plot
