@@ -230,15 +230,16 @@ class ModelTester:
                     car_id = id_batch_np[batch_el_idx].decode().split(".")[0]
 
                     # Plot
-                    plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
-                    if not exists(dirname(plot_path)):
-                        makedirs(dirname(plot_path))
-                    pcs = [x[i] for x in all_pcs]
-                    partial_temp = pcs[0][batch_el_idx][:model.config.num_input_points, :]
-                    coarse_temp = pcs[1][batch_el_idx, :, :]
-                    fine_temp = pcs[2][batch_el_idx, :, :]
-                    final_pcs = [partial_temp, coarse_temp, fine_temp]
-                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+                    if batch_el_idx == 0:
+                        plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
+                        if not exists(dirname(plot_path)):
+                            makedirs(dirname(plot_path))
+                        pcs = [x[i] for x in all_pcs]
+                        partial_temp = pcs[0][0][:model.config.num_input_points, :]
+                        coarse_temp = pcs[1][0, :, :]
+                        fine_temp = pcs[2][0, :, :]
+                        final_pcs = [partial_temp, coarse_temp, fine_temp]
+                        self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
                     # Save pcd
                     # Calculate center, rotation and scale
@@ -253,7 +254,7 @@ class ModelTester:
                     scale = bbox[3, 0] - bbox[0, 0]
                     bbox /= scale
 
-                    completion_w = np.dot(fine_temp, [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
+                    completion_w = np.dot(all_pcs[2][batch_el_idx, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
                     completion_w = np.dot(completion_w * scale, rotation.T) + center
                     pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
                     if not exists(dirname(pcd_path)):
