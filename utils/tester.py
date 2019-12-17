@@ -224,6 +224,7 @@ class ModelTester:
             # Plot & save completed pcd code
             all_pcs = [partial_points_list, coarse_list, fine_list]
             visualize_titles = ['input', 'coarse output', 'fine output']
+            print(ids_list)
             for i, id_batch_np in enumerate(ids_list):
                 for batch_el_idx in range(dataset.batch_num):
 
