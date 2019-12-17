@@ -18,6 +18,8 @@ import time
 
 # PLY reader
 from utils.ply import read_ply, write_ply
+import open3d as o3d
+
 
 # Metrics
 from utils.metrics import chamfer, earth_mover
@@ -213,13 +215,20 @@ class ModelTester:
                 break
 
         if model.config.saving:
-            if not exists(join(model.saving_path, 'visu', 'kitti')):
-                makedirs(join(model.saving_path, 'visu', 'kitti'))
+            if not exists(join(model.saving_path, 'visu', 'kitti', 'plots')):
+                makedirs(join(model.saving_path, 'visu', 'kitti', 'plots'))
 
+            if not exists(join(model.saving_path, 'visu', 'kitti', 'completions')):
+                makedirs(join(model.saving_path, 'visu', 'kitti', 'completions'))
+
+            # Plot & save completed pcd code
             all_pcs = [partial_points_list, coarse_list, fine_list]
             visualize_titles = ['input', 'coarse output', 'fine output']
             for i, id_batch_np in enumerate(ids_list):
-                plot_path = join(model.saving_path, 'visu', 'kitti', '%s.png' % id_batch_np[0].decode().split(".")[0])
+                car_id = id_batch_np[0].decode().split(".")[0]
+
+                # Plot
+                plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
                 if not exists(dirname(plot_path)):
                     makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]
@@ -228,6 +237,26 @@ class ModelTester:
                 fine_temp = pcs[2][0, :, :]
                 final_pcs = [partial_temp, coarse_temp, fine_temp]
                 self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+
+                # Save pcd
+                # Calculate center, rotation and scale
+                bbox = np.loadtxt(join(dataset.bbox_dir, '%s.txt' % car_id))
+                center = (bbox.min(0) + bbox.max(0)) / 2
+                bbox -= center
+                yaw = np.arctan2(bbox[3, 1] - bbox[0, 1], bbox[3, 0] - bbox[0, 0])
+                rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                                     [np.sin(yaw), np.cos(yaw), 0],
+                                     [0, 0, 1]])
+                bbox = np.dot(bbox, rotation)
+                scale = bbox[3, 0] - bbox[0, 0]
+                bbox /= scale
+
+                completion_w = np.dot(fine_temp[0, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
+                completion_w = np.dot(completion_w * scale, rotation.T) + center
+                pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
+                if not exists(dirname(pcd_path)):
+                    makedirs(dirname(pcd_path))
+                self.save_pcd(pcd_path, completion_w)
 
         return
 
@@ -254,3 +283,9 @@ class ModelTester:
         plt.suptitle(suptitle)
         fig.savefig(filename)
         plt.close(fig)
+
+    @staticmethod
+    def save_pcd(filename, points):
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(points)
+        o3d.io.write_point_cloud(filename, pcd)
