@@ -81,16 +81,17 @@ def test_caller(path, step_ind, on_val, dataset_path):
     print('*******************')
 
     # Initiate dataset configuration
+    dl0 = 0  # config.first_subsampling_dl
     if config.dataset.startswith('ShapeNetV1'):
         dataset = ShapeNetV1Dataset()
+        # Create subsample clouds of the models
+        dataset.load_subsampled_clouds(dl0)
     elif config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
         dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points, dataset_path)
+        # Create subsample clouds of the models
+        dataset.load_subsampled_clouds(dl0, True)  # TODO: careful dl0 is used here - padding?
     else:
         raise ValueError('Unsupported dataset : ' + config.dataset)
-
-    # Create subsample clouds of the models
-    dl0 = 0  # config.first_subsampling_dl
-    dataset.load_subsampled_clouds(dl0)  # TODO: careful dl0 is used here - padding?
 
     # Initialize input pipelines
     if on_val:

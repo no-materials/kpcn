@@ -168,7 +168,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         cloud_meta = ['{}.{:d}'.format('/'.join(fname.split('/')[-2:]), 0), ]
         return target, cloud_meta, partial
 
-    def load_subsampled_clouds(self, subsampling_parameter):
+    def load_subsampled_clouds(self, subsampling_parameter, is_test=False):
         """
         Presubsample point clouds and load into memory
         """
@@ -180,7 +180,12 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         self.complete_points = {'train': [], 'valid': [], 'test': []}
         self.ids = {'train': [], 'valid': [], 'test': []}
 
-        for split_type in ['train', 'valid', 'test']:
+        if is_test:
+            split_list = ['valid', 'test']
+        else:
+            split_list = ['train', 'valid', 'test']
+
+        for split_type in split_list:
 
             # Restart timer
             t0 = time.time()
