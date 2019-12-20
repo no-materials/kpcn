@@ -201,9 +201,11 @@ class ModelTester:
             features_np = np.array(latent_feat_list)
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))
 
-            print(features.shape)
+            print(ids_list[0].shape)
+            print(ids_list)
 
             df = pd.DataFrame(features)
+            # df['y'] =
             pca = PCA(n_components=3)
             pca_result = pca.fit_transform(features)
             df['pca-one'] = pca_result[:, 0]
