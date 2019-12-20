@@ -146,14 +146,14 @@ class ModelTester:
         print(latent_feat_list[0])
 
         if model.config.saving:
-            if not exists(join(model.saving_path, 'visu', 'test')):
-                makedirs(join(model.saving_path, 'visu', 'test'))
+            if not exists(join(model.saving_path, 'visu', 'test2')):
+                makedirs(join(model.saving_path, 'visu', 'test2'))
 
             all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
             all_dist = [coarse_em_list, fine_cd_list]
             visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
             for i, id_batch_np in enumerate(ids_list):
-                plot_path = join(model.saving_path, 'visu', 'test', '%s.png' % id_batch_np[0].decode().split(".")[0])
+                plot_path = join(model.saving_path, 'visu', 'test2', '%s.png' % id_batch_np[0].decode().split(".")[0])
                 if not exists(dirname(plot_path)):
                     makedirs(dirname(plot_path))
                 pcs = [x[i] for x in all_pcs]
