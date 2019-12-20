@@ -206,7 +206,9 @@ class ModelTester:
             df = pd.DataFrame(features)
             pca = PCA(n_components=3)
             pca_result = pca.fit_transform(features)
-            emb = {'pca-one': pca_result[:, 0], 'pca-two': pca_result[:, 1], 'pca-three': pca_result[:, 2]}
+            df['pca-one'] = pca_result[:, 0]
+            df['pca-two'] = pca_result[:, 1]
+            df['pca-three'] = pca_result[:, 2]
             print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
 
             plt.figure(figsize=(16, 10))
