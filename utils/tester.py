@@ -82,7 +82,6 @@ class ModelTester:
         else:
             self.sess.run(dataset.test_init_op)
             cardinal = dataset.num_test
-            print(cardinal)
 
         mean_dt = np.zeros(2)
         last_display = time.time()
@@ -131,9 +130,7 @@ class ModelTester:
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
                     message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
-                    print(len(obj_inds))
-                    print(obj_inds)
-                    print(message.format(100 * len(obj_inds) / cardinal,
+                    print(message.format(100 * len([item for sublist in obj_inds for item in sublist]) / cardinal,
                                          1000 * (mean_dt[0]),
                                          1000 * (mean_dt[1])))
 
