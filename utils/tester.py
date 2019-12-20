@@ -82,6 +82,7 @@ class ModelTester:
         else:
             self.sess.run(dataset.test_init_op)
             cardinal = dataset.num_test
+            print(cardinal)
 
         mean_dt = np.zeros(2)
         last_display = time.time()
