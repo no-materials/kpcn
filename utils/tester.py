@@ -202,7 +202,7 @@ class ModelTester:
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))
 
             print(ids_list[0].shape)
-            print(ids_list)
+            print(len(ids_list))
 
             df = pd.DataFrame(features)
             # df['y'] =
