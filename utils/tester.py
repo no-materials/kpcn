@@ -131,6 +131,8 @@ class ModelTester:
                 if (t[-1] - last_display) > 1.0:
                     last_display = t[-1]
                     message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                    print(len(obj_inds))
+                    print(obj_inds)
                     print(message.format(100 * len(obj_inds) / cardinal,
                                          1000 * (mean_dt[0]),
                                          1000 * (mean_dt[1])))
