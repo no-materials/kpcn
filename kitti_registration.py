@@ -59,7 +59,7 @@ def plot_pcd_pair(ax, pcd1, pcd2, title, cmaps, size, xlim=(-1.5, 1.5), ylim=(-1
 
 
 def track(args):
-    os.makedirs(os.path.join(args.saving_path, 'visu', 'kitti', 'registration' 'plots'), exist_ok=True)
+    os.makedirs(os.path.join(args.saving_path, 'visu', 'kitti', 'registration', 'plots'), exist_ok=True)
     csv_file = open(os.path.join(args.saving_path, 'visu', 'kitti', 'registration', 'error.csv'), 'w')
     writer = csv.writer(csv_file)
     writer.writerow(['id', 'r_err_part', 't_err_part', 'r_err_comp', 't_err_comp'])

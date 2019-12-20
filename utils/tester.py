@@ -98,14 +98,16 @@ class ModelTester:
         partial_points_list = []
         obj_inds = []
         ids_list = []
+        latent_feat_list = []
 
         while True:
             try:
                 # Run one step of the model.
                 t = [time.time()]
                 ops = (self.coarse_earth_mover, self.fine_chamfer, model.coarse, model.fine, model.complete_points,
-                       model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'])
-                coarse_em, fine_cd, coarse, fine, complete, partial, inds, idss = self.sess.run(ops, {
+                       model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'],
+                       model.bottleneck_features)
+                coarse_em, fine_cd, coarse, fine, complete, partial, inds, idss, latent_feat = self.sess.run(ops, {
                     model.dropout_prob: 1.0})
                 t += [time.time()]
 
@@ -118,6 +120,7 @@ class ModelTester:
                 partial_points_list += [partial]
                 obj_inds += [inds]
                 ids_list += [idss]
+                latent_feat_list += [latent_feat]
 
                 # Average timing
                 t += [time.time()]
@@ -139,6 +142,8 @@ class ModelTester:
         print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
             fine_cd_mean,
             coarse_em_mean))
+
+        print(latent_feat_list[0])
 
         if model.config.saving:
             if not exists(join(model.saving_path, 'visu', 'test')):
