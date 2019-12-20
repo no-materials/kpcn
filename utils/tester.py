@@ -201,8 +201,10 @@ class ModelTester:
             features_np = np.array(latent_feat_list)
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))
 
-            print(ids_list[0].shape)
-            print(len(ids_list))
+            ids_np = np.concatenate(ids_list, axis=None)
+            print(ids_np.shape)
+            print(ids_np)
+
 
             df = pd.DataFrame(features)
             # df['y'] =
