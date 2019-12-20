@@ -26,6 +26,11 @@ from utils.metrics import chamfer, earth_mover
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import seaborn as sns
+import pandas as pd
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
@@ -75,14 +80,6 @@ class ModelTester:
 
     def test_completion(self, model, dataset, on_val, num_votes=100):
 
-        # Initialise iterator with data
-        if on_val:
-            self.sess.run(dataset.val_init_op)
-            cardinal = dataset.num_valid
-        else:
-            self.sess.run(dataset.test_init_op)
-            cardinal = dataset.num_test
-
         mean_dt = np.zeros(2)
         last_display = time.time()
 
@@ -100,72 +97,129 @@ class ModelTester:
         ids_list = []
         latent_feat_list = []
 
-        while True:
-            try:
-                # Run one step of the model.
-                t = [time.time()]
-                ops = (self.coarse_earth_mover, self.fine_chamfer, model.coarse, model.fine, model.complete_points,
-                       model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'],
-                       model.bottleneck_features)
-                coarse_em, fine_cd, coarse, fine, complete, partial, inds, idss, latent_feat = self.sess.run(ops, {
-                    model.dropout_prob: 1.0})
-                t += [time.time()]
+        if on_val:
+            self.sess.run(dataset.val_init_op)
+            cardinal = dataset.num_valid
+            while True:
+                try:
+                    # Run one step of the model.
+                    t = [time.time()]
+                    ops = (self.coarse_earth_mover, self.fine_chamfer, model.coarse, model.fine, model.complete_points,
+                           model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'],
+                           model.bottleneck_features)
+                    coarse_em, fine_cd, coarse, fine, complete, partial, inds, idss, latent_feat = self.sess.run(ops, {
+                        model.dropout_prob: 1.0})
+                    t += [time.time()]
 
-                # Get distances and obj_indexes
-                coarse_em_list += [coarse_em]
-                fine_cd_list += [fine_cd]
-                coarse_list += [coarse]
-                fine_list += [fine]
-                complete_points_list += [complete]
-                partial_points_list += [partial]
-                obj_inds += [inds]
-                ids_list += [idss]
-                latent_feat_list += [latent_feat]
+                    # Get distances and obj_indexes
+                    coarse_em_list += [coarse_em]
+                    fine_cd_list += [fine_cd]
+                    coarse_list += [coarse]
+                    fine_list += [fine]
+                    complete_points_list += [complete]
+                    partial_points_list += [partial]
+                    obj_inds += [inds]
+                    ids_list += [idss]
+                    latent_feat_list += [latent_feat]
 
-                # Average timing
-                t += [time.time()]
-                mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+                    # Average timing
+                    t += [time.time()]
+                    mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
 
-                # Display
-                if (t[-1] - last_display) > 1.0:
-                    last_display = t[-1]
-                    message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
-                    print(message.format(100 * len([item for sublist in obj_inds for item in sublist]) / cardinal,
-                                         1000 * (mean_dt[0]),
-                                         1000 * (mean_dt[1])))
+                    # Display
+                    if (t[-1] - last_display) > 1.0:
+                        last_display = t[-1]
+                        message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                        print(message.format(100 * len([item for sublist in obj_inds for item in sublist]) / cardinal,
+                                             1000 * (mean_dt[0]),
+                                             1000 * (mean_dt[1])))
 
-            except tf.errors.OutOfRangeError:
-                break
+                except tf.errors.OutOfRangeError:
+                    break
 
-        coarse_em_mean = np.mean(coarse_em_list)
-        fine_cd_mean = np.mean(fine_cd_list)
-        print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
-            fine_cd_mean,
-            coarse_em_mean))
+            coarse_em_mean = np.mean(coarse_em_list)
+            fine_cd_mean = np.mean(fine_cd_list)
+            print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
+                fine_cd_mean,
+                coarse_em_mean))
 
-        print(np.array(latent_feat_list).shape)
-        print(np.array(latent_feat_list[0]).shape)
+            if model.config.saving:
+                if not exists(join(model.saving_path, 'visu', 'test2')):
+                    makedirs(join(model.saving_path, 'visu', 'test2'))
 
-        if model.config.saving:
-            if not exists(join(model.saving_path, 'visu', 'test2')):
-                makedirs(join(model.saving_path, 'visu', 'test2'))
+                all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
+                all_dist = [coarse_em_list, fine_cd_list]
+                visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
+                for i, id_batch_np in enumerate(ids_list):
+                    plot_path = join(model.saving_path, 'visu', 'test2',
+                                     '%s.png' % id_batch_np[0].decode().split(".")[0])
+                    if not exists(dirname(plot_path)):
+                        makedirs(dirname(plot_path))
+                    pcs = [x[i] for x in all_pcs]
+                    dists = [d[i] for d in all_dist]
+                    suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
+                    partial_temp = pcs[0][0][:model.config.num_input_points, :]
+                    coarse_temp = pcs[1][0, :, :]
+                    fine_temp = pcs[2][0, :, :]
+                    complete_temp = pcs[3][:model.config.num_gt_points, :]
+                    final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
+                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
+        else:  # on test set
+            self.sess.run(dataset.test_init_op)
+            cardinal = dataset.num_test
+            while True:
+                try:
+                    # Run one step of the model.
+                    t = [time.time()]
+                    ops = (model.coarse, model.fine, model.inputs['points'], model.inputs['object_inds'],
+                           model.inputs['ids'], model.bottleneck_features)
+                    coarse, fine, partial, inds, idss, latent_feat = self.sess.run(ops, {model.dropout_prob: 1.0})
+                    t += [time.time()]
 
-            all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
-            all_dist = [coarse_em_list, fine_cd_list]
-            visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
-            for i, id_batch_np in enumerate(ids_list):
-                plot_path = join(model.saving_path, 'visu', 'test2', '%s.png' % id_batch_np[0].decode().split(".")[0])
-                if not exists(dirname(plot_path)):
-                    makedirs(dirname(plot_path))
-                pcs = [x[i] for x in all_pcs]
-                dists = [d[i] for d in all_dist]
-                suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
-                partial_temp = pcs[0][0][:model.config.num_input_points, :]
-                coarse_temp = pcs[1][0, :, :]
-                fine_temp = pcs[2][0, :, :]
-                complete_temp = pcs[3][:model.config.num_gt_points, :]
-                final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
-                self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
+                    coarse_list += [coarse]
+                    fine_list += [fine]
+                    partial_points_list += [partial]
+                    obj_inds += [inds]
+                    ids_list += [idss]
+                    latent_feat_list += [latent_feat]
+
+                    # Average timing
+                    t += [time.time()]
+                    mean_dt = 0.95 * mean_dt + 0.05 * (np.array(t[1:]) - np.array(t[:-1]))
+
+                    # Display
+                    if (t[-1] - last_display) > 1.0:
+                        last_display = t[-1]
+                        message = 'Test : {:.1f}% (timings : {:4.2f} {:4.2f})'
+                        print(message.format(100 * len([item for sublist in obj_inds for item in sublist]) / cardinal,
+                                             1000 * (mean_dt[0]),
+                                             1000 * (mean_dt[1])))
+
+                except tf.errors.OutOfRangeError:
+                    break
+
+            features_np = np.array(latent_feat_list)
+            features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))
+
+            print(features.shape)
+
+            df = pd.DataFrame(features)
+            pca = PCA(n_components=3)
+            pca_result = pca.fit_transform(features)
+            emb = {'pca-one': pca_result[:, 0], 'pca-two': pca_result[:, 1], 'pca-three': pca_result[:, 2]}
+            print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
+
+            plt.figure(figsize=(16, 10))
+            sns.scatterplot(
+                x="pca-one", y="pca-two",
+                hue="y",
+                palette=sns.color_palette("hls", 10),
+                data=df.loc[:, :],
+                legend="full",
+                alpha=0.3
+            )
+            # fig.savefig(filename)
+            # plt.close(fig)
 
         return
 
@@ -229,7 +283,6 @@ class ModelTester:
             # Plot & save completed pcd code
             all_pcs = [partial_points_list, coarse_list, fine_list]
             visualize_titles = ['input', 'coarse output', 'fine output']
-            print(ids_list)
             for i, id_batch_np in enumerate(ids_list):
                 for j, batch_el_idx in enumerate(id_batch_np):
 

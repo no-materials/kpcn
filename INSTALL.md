@@ -25,6 +25,7 @@
      - h5py==2.9.0
      - pandas==0.24.2
      - transforms3d==0.3.1
+     - seaborn
      
 * Compile the customized Tensorflow operators located in `tf_custom_ops`. Open a terminal in this folder, and run:
 
