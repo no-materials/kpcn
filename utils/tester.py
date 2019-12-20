@@ -143,7 +143,8 @@ class ModelTester:
             fine_cd_mean,
             coarse_em_mean))
 
-        print(latent_feat_list[0])
+        print(np.array(latent_feat_list).shape)
+        print(np.array(latent_feat_list[0]).shape)
 
         if model.config.saving:
             if not exists(join(model.saving_path, 'visu', 'test2')):
