@@ -218,7 +218,7 @@ class ModelTester:
             plt.figure(figsize=(16, 10))
             sns.scatterplot(
                 x="pca-one", y="pca-two",
-                hue="y",
+                # hue="y",
                 palette=sns.color_palette("hls", 10),
                 data=df.loc[:, :],
                 legend="full",
