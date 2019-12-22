@@ -205,7 +205,6 @@ class ModelTester:
             print(ids_np.shape)
             print(ids_np)
 
-
             df = pd.DataFrame(features)
             # df['y'] =
             pca = PCA(n_components=3)
@@ -216,7 +215,7 @@ class ModelTester:
             print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
 
             plt.figure(figsize=(16, 10))
-            sns.scatterplot(
+            scatterplot = sns.scatterplot(
                 x="pca-one", y="pca-two",
                 # hue="y",
                 palette=sns.color_palette("hls", 10),
@@ -224,8 +223,9 @@ class ModelTester:
                 legend="full",
                 alpha=0.3
             )
-            # fig.savefig(filename)
-            # plt.close(fig)
+            fig = scatterplot.get_figure()
+            fig.savefig('scatterplot.png')
+            plt.close(fig)
 
         return
 
