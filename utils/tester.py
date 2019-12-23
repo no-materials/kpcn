@@ -149,29 +149,28 @@ class ModelTester:
 
             ids_np = np.concatenate(ids_list, axis=None)
             category_ids = np.array([id_el.decode().split("/")[0] for id_el in ids_np])
-            print(category_ids)
 
-            # df = pd.DataFrame(features)
-            # # df['y'] =
-            # pca = PCA(n_components=3)
-            # pca_result = pca.fit_transform(features)
-            # df['pca-one'] = pca_result[:, 0]
-            # df['pca-two'] = pca_result[:, 1]
-            # df['pca-three'] = pca_result[:, 2]
-            # print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
-            #
-            # plt.figure(figsize=(16, 10))
-            # scatterplot = sns.scatterplot(
-            #     x="pca-one", y="pca-two",
-            #     # hue="y",
-            #     palette=sns.color_palette("hls", 10),
-            #     data=df.loc[:, :],
-            #     legend="full",
-            #     alpha=0.3
-            # )
-            # fig = scatterplot.get_figure()
-            # fig.savefig('scatterplot.png')
-            # plt.close(fig)
+            df = pd.DataFrame(features)
+            df['y'] = category_ids
+            pca = PCA(n_components=3)
+            pca_result = pca.fit_transform(features)
+            df['pca-one'] = pca_result[:, 0]
+            df['pca-two'] = pca_result[:, 1]
+            df['pca-three'] = pca_result[:, 2]
+            print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
+
+            plt.figure(figsize=(16, 10))
+            scatterplot = sns.scatterplot(
+                x="pca-one", y="pca-two",
+                hue="y",
+                palette=sns.color_palette("hls", 10),
+                data=df.loc[:, :],
+                legend="full",
+                alpha=0.3
+            )
+            fig = scatterplot.get_figure()
+            fig.savefig('scatterplot.png')
+            plt.close(fig)
 
             return
 
