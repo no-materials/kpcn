@@ -148,7 +148,7 @@ class ModelTester:
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
             ids_np = np.concatenate(ids_list, axis=None)
-            category_ids = np.array([id.decode().split("/")[0] for id in ids_np])
+            category_ids = np.array([id_el.decode().split("/")[0] for id_el in ids_np])
             print(category_ids)
 
             # df = pd.DataFrame(features)
