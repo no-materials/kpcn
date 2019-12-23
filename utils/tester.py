@@ -148,8 +148,8 @@ class ModelTester:
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
             ids_np = np.concatenate(ids_list, axis=None)
-            print(ids_np.shape)
-            print(ids_np)
+            category_ids = np.array([id.decode().split("/")[0] for id in ids_np])
+            print(category_ids)
 
             # df = pd.DataFrame(features)
             # # df['y'] =
@@ -230,6 +230,7 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
+            # PCA & t-SNE plot
             features_np = np.array(latent_feat_list)
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))
 
