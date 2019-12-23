@@ -152,6 +152,7 @@ class ModelTester:
 
             df = pd.DataFrame(features)
             df['y'] = category_ids
+            # PCA
             pca = PCA(n_components=3)
             pca_result = pca.fit_transform(features)
             df['pca-one'] = pca_result[:, 0]
@@ -159,17 +160,43 @@ class ModelTester:
             df['pca-three'] = pca_result[:, 2]
             print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
 
-            plt.figure(figsize=(16, 10))
-            scatterplot = sns.scatterplot(
+            # t-sne (use PCA_50_dims first for dim reduction)
+            pca_50 = PCA(n_components=50)
+            pca_result_50 = pca_50.fit_transform(features)
+            print('Cumulative explained variation for 50 principal components: {}'.format(
+                np.sum(pca_50.explained_variance_ratio_)))
+
+            time_start = time.time()
+            tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
+            tsne_pca_results = tsne.fit_transform(pca_result_50)
+            print('t-SNE done! Time elapsed: {} seconds'.format(time.time() - time_start))
+            df['tsne-pca50-one'] = tsne_pca_results[:, 0]
+            df['tsne-pca50-two'] = tsne_pca_results[:, 1]
+
+            plt.figure(figsize=(16, 4))
+            ax1 = plt.subplot(1, 2, 1)
+            sns.scatterplot(
                 x="pca-one", y="pca-two",
                 hue="y",
                 palette=sns.color_palette("hls", 8),
                 data=df.loc[:, :],
                 legend="full",
-                alpha=0.3
+                alpha=0.3,
+                ax=ax1
             )
+            ax2 = plt.subplot(1, 2, 2)
+            scatterplot = sns.scatterplot(
+                x="tsne-pca50-one", y="tsne-pca50-two",
+                hue="y",
+                palette=sns.color_palette("hls", 8),
+                data=df.loc[:, :],
+                legend="full",
+                alpha=0.3,
+                ax=ax2
+            )
+
             fig = scatterplot.get_figure()
-            fig.savefig('scatterplot.png')
+            fig.savefig('PCA_tsne_val.png')
             plt.close(fig)
 
             return
@@ -256,7 +283,7 @@ class ModelTester:
                 alpha=0.3
             )
             fig = scatterplot.get_figure()
-            fig.savefig('scatterplot.png')
+            fig.savefig('PCA_test.png')
             plt.close(fig)
 
         return
