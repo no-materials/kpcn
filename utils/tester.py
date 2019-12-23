@@ -163,7 +163,7 @@ class ModelTester:
             scatterplot = sns.scatterplot(
                 x="pca-one", y="pca-two",
                 hue="y",
-                palette=sns.color_palette("hls", 10),
+                palette=sns.color_palette("hls", 8),
                 data=df.loc[:, :],
                 legend="full",
                 alpha=0.3
