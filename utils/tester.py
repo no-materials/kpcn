@@ -21,7 +21,7 @@ from utils.ply import read_ply, write_ply
 import open3d as o3d
 
 # Metrics
-from utils.metrics import chamfer, earth_mover
+from utils.metrics import chamfer, earth_mover, minimal_matching_distance
 
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -96,6 +96,7 @@ class ModelTester:
         obj_inds = []
         ids_list = []
         latent_feat_list = []
+        mmd_list = []
 
         if on_val:
             self.sess.run(dataset.val_init_op)
@@ -201,6 +202,9 @@ class ModelTester:
                     final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
                     self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
         else:  # on test set
+
+            self.minimal_matching_dist = minimal_matching_distance(model.fine, dataset)
+
             self.sess.run(dataset.test_init_op)
             cardinal = dataset.num_test
             while True:
@@ -208,8 +212,8 @@ class ModelTester:
                     # Run one step of the model.
                     t = [time.time()]
                     ops = (model.coarse, model.fine, model.inputs['points'], model.inputs['object_inds'],
-                           model.inputs['ids'], model.bottleneck_features)
-                    coarse, fine, partial, inds, idss, latent_feat = self.sess.run(ops, {model.dropout_prob: 1.0})
+                           model.inputs['ids'], model.bottleneck_features, self.minimal_matching_dist)
+                    coarse, fine, partial, inds, idss, latent_feat, mmd = self.sess.run(ops, {model.dropout_prob: 1.0})
                     t += [time.time()]
 
                     coarse_list += [coarse]
@@ -218,6 +222,7 @@ class ModelTester:
                     obj_inds += [inds]
                     ids_list += [idss]
                     latent_feat_list += [latent_feat]
+                    mmd_list += [mmd]
 
                     # Average timing
                     t += [time.time()]
@@ -233,6 +238,9 @@ class ModelTester:
 
                 except tf.errors.OutOfRangeError:
                     break
+
+            mmd_mean = np.mean(mmd_list)
+            print('Test MMD: {:4.5f}'.format(mmd_mean))
 
             # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
