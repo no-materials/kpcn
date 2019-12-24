@@ -27,17 +27,17 @@ def earth_mover(pcd1, pcd2):
 
 def minimal_matching_distance(pcd_fine, dataset, compare_on_val=True):
     cd_gt_from_fine_list = []
-    print(pcd_fine.shape)
-    print("OIIIIIII")
+
     if compare_on_val:
         gt_list = dataset.complete_points['valid']
     else:
         gt_list = dataset.complete_points['train']
 
-    for gt in gt_list:
-        print(gt.shape)
-        cd_gt_from_fine_list += [chamfer(pcd_fine, gt)]
+    for i in range(pcd_fine.shape[0]):
+        for gt in gt_list:
+            print(pcd_fine[i, :, :])
+            cd_gt_from_fine_list += [chamfer(pcd_fine[i, :, :], gt)]
 
-    # print(cd_gt_from_fine_list)
+    print(cd_gt_from_fine_list)
 
 
