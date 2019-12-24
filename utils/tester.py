@@ -143,7 +143,7 @@ class ModelTester:
                 fine_cd_mean,
                 coarse_em_mean))
 
-            # PCA & t-SNE plot
+            # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
@@ -152,15 +152,6 @@ class ModelTester:
 
             df = pd.DataFrame(features)
             df['y'] = category_ids
-            # PCA
-            pca = PCA(n_components=3)
-            pca_result = pca.fit_transform(features)
-            df['pca-one'] = pca_result[:, 0]
-            df['pca-two'] = pca_result[:, 1]
-            df['pca-three'] = pca_result[:, 2]
-            print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
-
-            # t-sne (use PCA_50_dims first for dim reduction)
             pca_50 = PCA(n_components=50)
             pca_result_50 = pca_50.fit_transform(features)
             print('Cumulative explained variation for 50 principal components: {}'.format(
@@ -173,18 +164,7 @@ class ModelTester:
             df['tsne-pca50-one'] = tsne_pca_results[:, 0]
             df['tsne-pca50-two'] = tsne_pca_results[:, 1]
 
-            plt.figure(figsize=(16, 4))
-            ax1 = plt.subplot(1, 2, 1)
-            sns.scatterplot(
-                x="pca-one", y="pca-two",
-                hue="y",
-                palette=sns.color_palette("hls", 8),
-                data=df.loc[:, :],
-                legend="full",
-                alpha=0.3,
-                ax=ax1
-            )
-            ax2 = plt.subplot(1, 2, 2)
+            plt.figure(figsize=(9, 9))
             scatterplot = sns.scatterplot(
                 x="tsne-pca50-one", y="tsne-pca50-two",
                 hue="y",
@@ -192,11 +172,9 @@ class ModelTester:
                 data=df.loc[:, :],
                 legend="full",
                 alpha=0.3,
-                ax=ax2
             )
-
             fig = scatterplot.get_figure()
-            fig.savefig('PCA_tsne_val.png')
+            fig.savefig('PCA50_tsne_val.png')
             plt.close(fig)
 
             return
@@ -256,34 +234,38 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
-            # PCA & t-SNE plot
+            # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
-            features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))
+            features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
             ids_np = np.concatenate(ids_list, axis=None)
-            print(ids_np.shape)
-            print(ids_np)
+            category_ids = np.array([dataset.synset_to_category[id_el.decode().split("/")[0]] for id_el in ids_np])
 
             df = pd.DataFrame(features)
-            # df['y'] =
-            pca = PCA(n_components=3)
-            pca_result = pca.fit_transform(features)
-            df['pca-one'] = pca_result[:, 0]
-            df['pca-two'] = pca_result[:, 1]
-            df['pca-three'] = pca_result[:, 2]
-            print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
+            # df['y'] = category_ids
+            pca_50 = PCA(n_components=50)
+            pca_result_50 = pca_50.fit_transform(features)
+            print('Cumulative explained variation for 50 principal components: {}'.format(
+                np.sum(pca_50.explained_variance_ratio_)))
 
-            plt.figure(figsize=(16, 10))
+            time_start = time.time()
+            tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
+            tsne_pca_results = tsne.fit_transform(pca_result_50)
+            print('t-SNE done! Time elapsed: {} seconds'.format(time.time() - time_start))
+            df['tsne-pca50-one'] = tsne_pca_results[:, 0]
+            df['tsne-pca50-two'] = tsne_pca_results[:, 1]
+
+            plt.figure(figsize=(9, 9))
             scatterplot = sns.scatterplot(
-                x="pca-one", y="pca-two",
+                x="tsne-pca50-one", y="tsne-pca50-two",
                 # hue="y",
-                palette=sns.color_palette("hls", 10),
+                palette=sns.color_palette("hls", 8),
                 data=df.loc[:, :],
                 legend="full",
-                alpha=0.3
+                alpha=0.3,
             )
             fig = scatterplot.get_figure()
-            fig.savefig('PCA_test.png')
+            fig.savefig('PCA50_tsne_test.png')
             plt.close(fig)
 
         return
