@@ -33,11 +33,9 @@ def minimal_matching_distance(pcd_fine, dataset, compare_on_val=True):
     else:
         gt_list = dataset.complete_points['train']
 
-    for i in range(pcd_fine.shape[0]):
+    for i in range(dataset.batch_num):
         for gt in gt_list:
             print(pcd_fine[i, :, :])
             cd_gt_from_fine_list += [chamfer(pcd_fine[i, :, :], gt)]
 
     print(cd_gt_from_fine_list)
-
-
