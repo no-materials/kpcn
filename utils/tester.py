@@ -238,11 +238,7 @@ class ModelTester:
             features_np = np.array(latent_feat_list)
             features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
-            ids_np = np.concatenate(ids_list, axis=None)
-            category_ids = np.array([dataset.synset_to_category[id_el.decode().split("/")[0]] for id_el in ids_np])
-
             df = pd.DataFrame(features)
-            # df['y'] = category_ids
             pca_50 = PCA(n_components=50)
             pca_result_50 = pca_50.fit_transform(features)
             print('Cumulative explained variation for 50 principal components: {}'.format(
@@ -258,7 +254,6 @@ class ModelTester:
             plt.figure(figsize=(9, 9))
             scatterplot = sns.scatterplot(
                 x="tsne-pca50-one", y="tsne-pca50-two",
-                # hue="y",
                 palette=sns.color_palette("hls", 8),
                 data=df.loc[:, :],
                 legend="full",
