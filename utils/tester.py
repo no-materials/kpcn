@@ -241,8 +241,8 @@ class ModelTester:
             print(mmd_list)  # [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
             matched_models = []
             mmds = []
-            for b in mmd_list:
-                for pair in mmd_list[b]:
+            for idxb, b in enumerate(mmd_list):
+                for pair in mmd_list[idxb]:
                     matched_models.append(dataset.complete_points['valid'][pair[0]])
 
             print(len(matched_models))
