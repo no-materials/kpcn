@@ -36,7 +36,7 @@ def minimal_matching_distance(pcd_fine, dataset, compare_on_val=True):
     batch_min_cds_and_gt = []
     for i in range(dataset.batch_num):
         for gt in gt_list:
-            cd_gt_from_fine_list += [chamfer(pcd_fine[i, :, :], gt)]
+            cd_gt_from_fine_list += [chamfer(tf.expand_dims(pcd_fine[i, :, :], 0), tf.expand_dims(gt, 0))]
         stacked_cds = tf.stack(cd_gt_from_fine_list)
         min_idx = tf.math.argmin(stacked_cds)
         batch_min_cds_and_gt.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
