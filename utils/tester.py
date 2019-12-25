@@ -139,6 +139,8 @@ class ModelTester:
                     break
 
             print(coarse_em_list)
+            print(fine_cd_list)
+            print(len(fine_cd_list))
             coarse_em_mean = np.mean(coarse_em_list)
             fine_cd_mean = np.mean(fine_cd_list)
             print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
