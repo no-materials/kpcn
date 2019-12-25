@@ -246,7 +246,7 @@ class ModelTester:
                     matched_models.append(dataset.complete_points['valid'][pair[0]])
 
             print(len(matched_models))
-            print(np.array(complete_points_list).shape)
+            print(np.array(fine_list).shape)
             print(np.array(matched_models).shape)
             return
             # mmd_np = np.array(mmd_list)
