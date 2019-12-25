@@ -33,9 +33,14 @@ def minimal_matching_distance(pcd_fine, dataset, compare_on_val=True):
     else:
         gt_list = dataset.complete_points['train']
 
+    batch_min_cds_and_gt = []
     for i in range(dataset.batch_num):
         for gt in gt_list:
-            print(pcd_fine[i, :, :])
             cd_gt_from_fine_list += [chamfer(pcd_fine[i, :, :], gt)]
+        stacked_cds = tf.stack(cd_gt_from_fine_list)
+        min_idx = tf.math.argmin(stacked_cds)
+        batch_min_cds_and_gt += [(min_idx, gt_list[min_idx])]
+        print(batch_min_cds_and_gt)
+        cd_gt_from_fine_list = []
 
-    print(cd_gt_from_fine_list)
+    return batch_min_cds_and_gt
