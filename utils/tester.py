@@ -239,16 +239,17 @@ class ModelTester:
                     break
 
             print(mmd_list)  # [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
-            matched_models = []
+            matched_models_list = []
             mmds = []
             for idxb, b in enumerate(mmd_list):
                 for pair in mmd_list[idxb]:
-                    matched_models.append(dataset.complete_points['valid'][pair[0]])
+                    matched_models_list.append(dataset.complete_points['valid'][pair[0]])
 
-            print(len(matched_models))
-            print(np.array(fine_list).shape)
-            print(np.array(matched_models).shape)
-            return
+            matched_models_list = np.array(matched_models_list)
+            matched_models_list = np.reshape(matched_models_list,
+                                             (-1, dataset.batch_num, matched_models_list.shape[1],
+                                              matched_models_list.shape[2]))
+
             # mmd_np = np.array(mmd_list)
             # # print(mmd_np)
             # mmd_mean = np.mean(mmd_np)
@@ -258,8 +259,8 @@ class ModelTester:
                 if not exists(join(model.saving_path, 'visu', 'test2')):
                     makedirs(join(model.saving_path, 'visu', 'test2'))
 
-                all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
-                all_dist = [coarse_em_list, fine_cd_list]
+                all_pcs = [partial_points_list, coarse_list, fine_list, matched_models_list]
+                # all_dist = [coarse_em_list, fine_cd_list]
                 visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
                 for i, id_batch_np in enumerate(ids_list):
                     plot_path = join(model.saving_path, 'visu', 'test2',
@@ -267,14 +268,14 @@ class ModelTester:
                     if not exists(dirname(plot_path)):
                         makedirs(dirname(plot_path))
                     pcs = [x[i] for x in all_pcs]
-                    dists = [d[i] for d in all_dist]
-                    suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
+                    # dists = [d[i] for d in all_dist]
+                    # suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
                     partial_temp = pcs[0][0][:model.config.num_input_points, :]
                     coarse_temp = pcs[1][0, :, :]
                     fine_temp = pcs[2][0, :, :]
-                    complete_temp = pcs[3][:model.config.num_gt_points, :]
-                    final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
-                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
+                    matched_temp = pcs[3][0, :, :]
+                    final_pcs = [partial_temp, coarse_temp, fine_temp, matched_temp]
+                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
 
             # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
