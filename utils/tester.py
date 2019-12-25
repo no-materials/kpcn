@@ -138,6 +138,7 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
+            print(coarse_em_list)
             coarse_em_mean = np.mean(coarse_em_list)
             fine_cd_mean = np.mean(fine_cd_list)
             print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
