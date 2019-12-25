@@ -242,11 +242,14 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
-            print(mmd_list)
-            mmd_np = np.array(mmd_list)
-            # print(mmd_np)
-            mmd_mean = np.mean(mmd_np)
-            print('Test MMD: {:4.5f}'.format(mmd_mean))
+
+            print(partial_points_list)
+            print(np.array(partial_points_list).shape)
+            # print(mmd_list)
+            # mmd_np = np.array(mmd_list)
+            # # print(mmd_np)
+            # mmd_mean = np.mean(mmd_np)
+            # print('Test MMD: {:4.5f}'.format(mmd_mean))
 
             # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
