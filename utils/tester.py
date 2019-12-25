@@ -239,8 +239,9 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
+            print(mmd_list)
             mmd_np = np.array(mmd_list)
-            print(mmd_np)
+            # print(mmd_np)
             mmd_mean = np.mean(mmd_np)
             print('Test MMD: {:4.5f}'.format(mmd_mean))
 
