@@ -138,14 +138,33 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
-            print(coarse_em_list)
-            print(fine_cd_list)
-            print(len(fine_cd_list))
             coarse_em_mean = np.mean(coarse_em_list)
             fine_cd_mean = np.mean(fine_cd_list)
             print('Test distances\nMean (Fine) Chamfer: {:4.5f}\tMean (Coarse) Earth Mover: {:4.5f}'.format(
                 fine_cd_mean,
                 coarse_em_mean))
+
+            if model.config.saving:
+                if not exists(join(model.saving_path, 'visu', 'test_on_val')):
+                    makedirs(join(model.saving_path, 'visu', 'test_on_val'))
+
+                all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
+                all_dist = [coarse_em_list, fine_cd_list]
+                visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
+                for i, id_batch_np in enumerate(ids_list):
+                    plot_path = join(model.saving_path, 'visu', 'test_on_val',
+                                     '%s.png' % id_batch_np[0].decode().split(".")[0])
+                    if not exists(dirname(plot_path)):
+                        makedirs(dirname(plot_path))
+                    pcs = [x[i] for x in all_pcs]
+                    dists = [d[i] for d in all_dist]
+                    suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
+                    partial_temp = pcs[0][0][:model.config.num_input_points, :]
+                    coarse_temp = pcs[1][0, :, :]
+                    fine_temp = pcs[2][0, :, :]
+                    complete_temp = pcs[3][:model.config.num_gt_points, :]
+                    final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
+                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
 
             # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
@@ -181,29 +200,6 @@ class ModelTester:
             fig.savefig('PCA50_tsne_val.png')
             plt.close(fig)
 
-            return
-
-            if model.config.saving:
-                if not exists(join(model.saving_path, 'visu', 'test2')):
-                    makedirs(join(model.saving_path, 'visu', 'test2'))
-
-                all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
-                all_dist = [coarse_em_list, fine_cd_list]
-                visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
-                for i, id_batch_np in enumerate(ids_list):
-                    plot_path = join(model.saving_path, 'visu', 'test2',
-                                     '%s.png' % id_batch_np[0].decode().split(".")[0])
-                    if not exists(dirname(plot_path)):
-                        makedirs(dirname(plot_path))
-                    pcs = [x[i] for x in all_pcs]
-                    dists = [d[i] for d in all_dist]
-                    suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
-                    partial_temp = pcs[0][0][:model.config.num_input_points, :]
-                    coarse_temp = pcs[1][0, :, :]
-                    fine_temp = pcs[2][0, :, :]
-                    complete_temp = pcs[3][:model.config.num_gt_points, :]
-                    final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
-                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
         else:  # on test set
 
             self.minimal_matching_dist = minimal_matching_distance(model.fine, dataset)
@@ -242,14 +238,42 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
+            print(mmd_list)  # [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
+            matched_models = []
+            mmds = []
+            for b in mmd_list:
+                for pair in mmd_list[b]:
+                    matched_models.append(dataset.complete_points['valid'][pair[0]])
 
-            print(partial_points_list)
-            print(np.array(partial_points_list).shape)
-            # print(mmd_list)
+            print(len(matched_models))
+            print(np.array(matched_models).shape)
+            return
             # mmd_np = np.array(mmd_list)
             # # print(mmd_np)
             # mmd_mean = np.mean(mmd_np)
             # print('Test MMD: {:4.5f}'.format(mmd_mean))
+
+            if model.config.saving:
+                if not exists(join(model.saving_path, 'visu', 'test2')):
+                    makedirs(join(model.saving_path, 'visu', 'test2'))
+
+                all_pcs = [partial_points_list, coarse_list, fine_list, complete_points_list]
+                all_dist = [coarse_em_list, fine_cd_list]
+                visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
+                for i, id_batch_np in enumerate(ids_list):
+                    plot_path = join(model.saving_path, 'visu', 'test2',
+                                     '%s.png' % id_batch_np[0].decode().split(".")[0])
+                    if not exists(dirname(plot_path)):
+                        makedirs(dirname(plot_path))
+                    pcs = [x[i] for x in all_pcs]
+                    dists = [d[i] for d in all_dist]
+                    suptitle = 'Coarse EMD = {:4.5f}    Fine CD = {:4.5f}'.format(dists[0], dists[1])
+                    partial_temp = pcs[0][0][:model.config.num_input_points, :]
+                    coarse_temp = pcs[1][0, :, :]
+                    fine_temp = pcs[2][0, :, :]
+                    complete_temp = pcs[3][:model.config.num_gt_points, :]
+                    final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
+                    self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
 
             # t-SNE plot (use PCA_50_dims first for dim reduction)
             features_np = np.array(latent_feat_list)
