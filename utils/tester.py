@@ -251,13 +251,9 @@ class ModelTester:
                                              (-1, dataset.batch_num, matched_models_list.shape[1],
                                               matched_models_list.shape[2]))
             mmds = np.array(mmds)  # shape: (800,)
-            print(mmds.shape)
+            mmd_mean = np.mean(mmds)
+            print('Test MMD: {:4.5f}'.format(mmd_mean))
             mmds = np.reshape(mmds, (-1, dataset.batch_num))
-
-            # mmd_np = np.array(mmd_list)
-            # # print(mmd_np)
-            # mmd_mean = np.mean(mmd_np)
-            # print('Test MMD: {:4.5f}'.format(mmd_mean))
 
             if model.config.saving:
                 if not exists(join(model.saving_path, 'visu', 'test2')):
