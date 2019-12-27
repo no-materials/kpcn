@@ -252,7 +252,7 @@ class ModelTester:
                                               matched_models_list.shape[2]))
             mmds = np.array(mmds)
             print(mmds.shape)
-            mmds = np.reshape(mmds, (-1, dataset.batch_num, mmds.shape[1]))
+            mmds = np.reshape(mmds, (-1, dataset.batch_num))
 
             # mmd_np = np.array(mmd_list)
             # # print(mmd_np)
