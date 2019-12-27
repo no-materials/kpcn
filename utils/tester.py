@@ -238,12 +238,12 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
-            print(mmd_list)  # [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
+            #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
             matched_models_list = []
             mmds = []
             for idxb, b in enumerate(mmd_list):
                 for pair in mmd_list[idxb]:  # TODO: when valid set changes, fix this
-                    matched_models_list.append(dataset.complete_points['valid'][pair[0]])  # store matched model
+                    matched_models_list.append(dataset.complete_points['train'][pair[0]])  # store matched model
                     mmds.append(pair[1])  # store mmd
 
             matched_models_list = np.array(matched_models_list)
