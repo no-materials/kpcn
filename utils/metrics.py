@@ -28,6 +28,7 @@ def earth_mover(pcd1, pcd2):
 def minimal_matching_distance(pcd_fine, dataset, compare_on_val=True):
     cd_gt_from_fine_list = []
 
+    # TODO: use train set for matching + calculate average distances and specific distances
     if compare_on_val:
         gt_list = dataset.complete_points['valid']
     else:
