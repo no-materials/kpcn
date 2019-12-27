@@ -250,7 +250,7 @@ class ModelTester:
             matched_models_list = np.reshape(matched_models_list,
                                              (-1, dataset.batch_num, matched_models_list.shape[1],
                                               matched_models_list.shape[2]))
-            mmds = np.array(mmds)
+            mmds = np.array(mmds)  # shape: (800,)
             print(mmds.shape)
             mmds = np.reshape(mmds, (-1, dataset.batch_num))
 
@@ -273,7 +273,7 @@ class ModelTester:
                         makedirs(dirname(plot_path))
                     pcs = [x[i] for x in all_pcs]
                     dists = [d[i] for d in all_dist]
-                    suptitle = 'Minimal Matching Distance (MMD) = {:4.5f}'.format(dists[0])
+                    suptitle = 'Minimal Matching Distance (MMD) = {:4.5f}'.format(dists[0][0])
                     partial_temp = pcs[0][0][:model.config.num_input_points, :]
                     coarse_temp = pcs[1][0, :, :]
                     fine_temp = pcs[2][0, :, :]
