@@ -25,7 +25,7 @@ def earth_mover(pcd1, pcd2):
     return tf.reduce_mean(cost / num_points)
 
 
-def minimal_matching_distance(pcd_fine, dataset, compare_on_val=False):
+def minimal_matching_distance(pcd_fine, dataset, compare_on_val=True):
     cd_gt_from_fine_list = []
 
     # TODO: use train set for matching

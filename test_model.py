@@ -69,8 +69,8 @@ def test_caller(path, step_ind, on_val, dataset_path):
     config.augment_rotation = 'none'
     config.augment_scale_min = 1.0
     config.augment_scale_max = 1.0
-    config.augment_noise = 0.0
-    config.augment_occlusion = 'none'
+    config.augment_noise = 2
+    config.augment_occlusion = 'none'  # TODO: create occlusion augmentation & vis very noisy input...
 
     ##############
     # Prepare Data
