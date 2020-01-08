@@ -65,7 +65,7 @@ def test_caller(path, step_ind, on_val, dataset_path):
 
     # Augmentations
     config.augment_scale_anisotropic = True
-    config.augment_symmetries = [True, False, False]
+    config.augment_symmetries = [False, False, False]
     config.augment_rotation = 'none'
     config.augment_scale_min = 1.0
     config.augment_scale_max = 1.0

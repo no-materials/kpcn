@@ -49,6 +49,24 @@ class ModelTester:
         my_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork')
         self.saver = tf.train.Saver(my_vars, max_to_keep=100)
 
+
+        print('*************************************')
+        summ = 0
+        for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='KernelPointNetwork'):
+            print(var.name, var.shape)
+            summ += np.prod(var.shape)
+        print('total parameters : ', summ)
+        print('*************************************')
+
+        print('*************************************')
+        summ = 0
+        for var in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='KernelPointNetwork'):
+            print(var.name, var.shape)
+            summ += np.prod(var.shape)
+        print('total parameters : ', summ)
+        print('*************************************')
+
+
         # Create a session for running Ops on the Graph.
         # TODO: add auto check device
         on_CPU = False
