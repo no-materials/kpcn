@@ -111,11 +111,11 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         self.dataset_path = dataset_path
 
         # Path to preprocessed data folder
-        self.data_path = join(dirname(dirname(realpath(__file__))),
-                              'data',
-                              'shapenetBenchmark2048')
-        if not exists(self.data_path):
-            makedirs(self.data_path)
+        # self.data_path = join(dirname(dirname(realpath(__file__))),
+        #                       'data',
+        #                       'shapenetBenchmark2048')
+        # if not exists(self.data_path):
+        #     makedirs(self.data_path)
 
         self.batch_num = batch_num
 
@@ -191,7 +191,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
             # Load wanted points if possible
             print('\nLoading %s points' % split_type)
-            filename = join(self.data_path, '{0:s}_{1:.3f}_record.pkl'.format(split_type, subsampling_parameter))
+            filename = join(self.dataset_path, '{0:s}_{1:.3f}_record.pkl'.format(split_type, subsampling_parameter))
 
             if exists(filename):
                 with open(filename, 'rb') as file:
