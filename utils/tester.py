@@ -256,14 +256,14 @@ class ModelTester:
             mmds = np.reshape(mmds, (-1, dataset.batch_num))
 
             if model.config.saving:
-                if not exists(join(model.saving_path, 'visu', 'test2')):
-                    makedirs(join(model.saving_path, 'visu', 'test2'))
+                if not exists(join(model.saving_path, 'visu', 'test_retrieval')):
+                    makedirs(join(model.saving_path, 'visu', 'test_retrieval'))
 
                 all_pcs = [partial_points_list, coarse_list, fine_list, matched_models_list]
                 all_dist = [mmds]
                 visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
                 for i, id_batch_np in enumerate(ids_list):
-                    plot_path = join(model.saving_path, 'visu', 'test2',
+                    plot_path = join(model.saving_path, 'visu', 'test_retrieval',
                                      '%s.png' % id_batch_np[0].decode().split(".")[0])
                     if not exists(dirname(plot_path)):
                         makedirs(dirname(plot_path))
