@@ -206,6 +206,8 @@ class ModelTester:
 
             self.sess.run(dataset.test_init_op)
             cardinal = dataset.num_test
+            print("Retrieving {} models from db of size 800".format(cardinal))
+            retrieval_time_start = time.time()
             while True:
                 try:
                     # Run one step of the model.
@@ -238,6 +240,7 @@ class ModelTester:
                 except tf.errors.OutOfRangeError:
                     break
 
+            print('Retrieval from db done! Time elapsed: {} seconds'.format(time.time() - retrieval_time_start))
             #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
             matched_models_list = []
             mmds = []
