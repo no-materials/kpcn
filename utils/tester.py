@@ -261,7 +261,7 @@ class ModelTester:
 
                 all_pcs = [partial_points_list, coarse_list, fine_list, matched_models_list]
                 all_dist = [mmds]
-                visualize_titles = ['input', 'coarse output', 'fine output', 'ground truth']
+                visualize_titles = ['input', 'coarse output', 'fine output', 'matched model']
                 for i, id_batch_np in enumerate(ids_list):
                     plot_path = join(model.saving_path, 'visu', 'test_retrieval',
                                      '%s.png' % id_batch_np[0].decode().split(".")[0])
