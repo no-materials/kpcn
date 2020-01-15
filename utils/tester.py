@@ -206,7 +206,7 @@ class ModelTester:
 
             self.sess.run(dataset.test_init_op)
             cardinal = dataset.num_test
-            print("Retrieving {} models from db of size 800".format(cardinal))
+            print("Retrieving {} models from db of size {}".format(cardinal, dataset.num_train))
             retrieval_time_start = time.time()
             while True:
                 try:
@@ -245,8 +245,8 @@ class ModelTester:
             matched_models_list = []
             mmds = []
             for idxb, b in enumerate(mmd_list):
-                for pair in mmd_list[idxb]:  # TODO: when valid set changes, fix this
-                    matched_models_list.append(dataset.complete_points['valid'][pair[0]])  # store matched model
+                for pair in mmd_list[idxb]:
+                    matched_models_list.append(dataset.complete_points['train'][pair[0]])  # store matched model
                     mmds.append(pair[1])  # store mmd
 
             matched_models_list = np.array(matched_models_list)
