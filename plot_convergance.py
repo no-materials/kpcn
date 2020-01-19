@@ -43,9 +43,7 @@ def running_mean(signal, n, axis=0):
 
 def load_training_results(path):
     filename = join(path, 'training.txt')
-    with open(filename, 'r') as f:
-        lines = f.readlines()
-
+    epochs = []
     steps = []
     L_out = []
     L_reg = []
@@ -55,22 +53,51 @@ def load_training_results(path):
     mixed_loss = []
     t = []
     memory = []
+    with open(filename, 'r') as f:
+        for line in f:
+            line_info = line.split()
+            if len(line) > 0:
+                try:
+                    epochs += [int(line_info[0])]
+                    steps += [int(line_info[1])]
+                    L_out += [float(line_info[2])]
+                    L_reg += [float(line_info[3])]
+                    L_p += [float(line_info[4])]
+                    coarse_EM += [float(line_info[5])]
+                    fine_CD += [float(line_info[6])]
+                    mixed_loss += [float(line_info[7])]
+                    t += [float(line_info[8])]
+                    memory += [float(line_info[9])]
+                except ValueError as e:
+                    print("error", e, "on line", epochs[-1])
+            else:
+                break
+
+    return steps, L_out, L_reg, L_p, coarse_EM, fine_CD, mixed_loss, t, memory
+
+
+def load_validation_results(path):
+    filename = join(path, 'validation.txt')
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+    epochs = []
+    steps = []
+    coarse_EM = []
+    fine_CD = []
+    mixed_loss = []
     for line in lines[1:]:
         line_info = line.split()
         if len(line) > 0:
-            steps += [int(line_info[0])]
-            L_out += [float(line_info[1])]
-            L_reg += [float(line_info[2])]
-            L_p += [float(line_info[3])]
-            coarse_EM += [float(line_info[4])]
-            fine_CD += [float(line_info[5])]
-            mixed_loss += [float(line_info[6])]
-            t += [float(line_info[7])]
-            memory += [float(line_info[8])]
+            epochs += [int(line_info[0])]
+            steps += [int(line_info[1])]
+            coarse_EM += [float(line_info[2])]
+            fine_CD += [float(line_info[3])]
+            mixed_loss += [float(line_info[4])]
         else:
             break
 
-    return steps, L_out, L_reg, L_p, coarse_EM, fine_CD, mixed_loss, t, memory
+    return epochs, steps, coarse_EM, fine_CD, mixed_loss
 
 
 def compare_trainings(list_of_paths, list_of_labels=None):
@@ -108,14 +135,20 @@ def compare_trainings(list_of_paths, list_of_labels=None):
 
         if config.dataset == 'ShapeNetV1':
             steps_per_epoch = np.ceil(57946 / int(config.batch_num))  # 3622
+        elif config.dataset == 'pc_shapenetCompletionBenchmark2048':
+            steps_per_epoch = np.ceil(28974 / int(config.batch_num))  # 1810,...
 
         smooth_n = int(steps_per_epoch * smooth_epochs)
 
         # Load results
         steps, L_out, L_reg, L_p, coarse_EM, fine_CD, mixed_loss, t, memory = load_training_results(path)
+        # epochs, steps, coarse_EM, fine_CD, mixed_loss = load_validation_results(path)
         all_epochs += [np.array(steps) / steps_per_epoch]
         all_loss += [running_mean(mixed_loss, smooth_n)]
         all_times += [t]
+
+        all_epochs2 = all_epochs[0][0:360392]
+        all_loss2 = all_loss[0][0:360392]
 
         # Learning rate
         lr_decay_v = np.array([lr_d for ep, lr_d in config.lr_decays.items()])
@@ -155,7 +188,7 @@ def compare_trainings(list_of_paths, list_of_labels=None):
     # Figure
     fig = plt.figure('loss')
     for i, label in enumerate(list_of_labels):
-        plt.plot(all_epochs[i], all_loss[i], linewidth=1, label=label)
+        plt.plot(all_epochs2, all_loss2, linewidth=1, label=label)
 
     # Set names for axes
     plt.xlabel('epochs')
@@ -164,7 +197,7 @@ def compare_trainings(list_of_paths, list_of_labels=None):
 
     # Display legends and title
     plt.legend(loc=1)
-    plt.title('Losses compare')
+    plt.title('Training Loss')
 
     # Customize the graph
     ax = fig.gca()
@@ -175,22 +208,22 @@ def compare_trainings(list_of_paths, list_of_labels=None):
     # **********
 
     # Figure
-    fig = plt.figure('time')
-    for i, label in enumerate(list_of_labels):
-        plt.plot(all_epochs[i], np.array(all_times[i]) / 3600, linewidth=1, label=label)
-
-    # Set names for axes
-    plt.xlabel('epochs')
-    plt.ylabel('time')
-    # plt.yscale('log')
-
-    # Display legends and title
-    plt.legend(loc=0)
-
-    # Customize the graph
-    ax = fig.gca()
-    ax.grid(linestyle='-.', which='both')
-    # ax.set_yticks(np.arange(0.8, 1.02, 0.02))
+    # fig = plt.figure('time')
+    # for i, label in enumerate(list_of_labels):
+    #     plt.plot(all_epochs[i], np.array(all_times[i]) / 3600, linewidth=1, label=label)
+    #
+    # # Set names for axes
+    # plt.xlabel('epochs')
+    # plt.ylabel('time')
+    # # plt.yscale('log')
+    #
+    # # Display legends and title
+    # plt.legend(loc=0)
+    #
+    # # Customize the graph
+    # ax = fig.gca()
+    # ax.grid(linestyle='-.', which='both')
+    # # ax.set_yticks(np.arange(0.8, 1.02, 0.02))
 
     # Show all
     plt.show()
@@ -209,12 +242,12 @@ if __name__ == '__main__':
     ######################################################
 
     # Using the dates of the logs, you can easily gather consecutive ones. All logs should be of the same dataset.
-    start = 'Log_2019-11-13_13-28-41'
-    end = 'Log_2019-11-13_13-28-41'
+    start = 'Log_2019-12-08_14-44-40'
+    end = 'Log_2019-12-08_14-44-40'
     logs = np.sort([join('results', l) for l in listdir('results') if start <= l <= end])
 
     # Give names to the logs (for legends)
-    logs_names = ['Log1_deform_one_fold']
+    logs_names = ['Log_SN2048_batch16']
     logs_names = np.array(logs_names[:len(logs)])
 
     ################################################################
