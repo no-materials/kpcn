@@ -311,7 +311,10 @@ class ModelTester:
 
         return
 
-    def test_kitti_completion(self, model, dataset):
+    def test_kitti_completion(self, model, dataset, shapenet2048_dataset):
+
+        # Set MMD metric op by passing ShapeNet dataset
+        self.minimal_matching_dist = minimal_matching_distance(model.fine, shapenet2048_dataset)
 
         # Initialise iterator with data
         self.sess.run(dataset.test_init_op)
@@ -329,14 +332,16 @@ class ModelTester:
         partial_points_list = []
         obj_inds = []
         ids_list = []
+        mmd_list = []
 
         while True:
             try:
                 # Run one step of the model.
                 t = [time.time()]
                 ops = (
-                    model.coarse, model.fine, model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'])
-                coarse, fine, partial, inds, idss = self.sess.run(ops, {model.dropout_prob: 1.0})
+                    model.coarse, model.fine, model.inputs['points'], model.inputs['object_inds'], model.inputs['ids'],
+                    self.minimal_matching_dist)
+                coarse, fine, partial, inds, idss, mmd = self.sess.run(ops, {model.dropout_prob: 1.0})
                 t += [time.time()]
 
                 # Get results and append to list
@@ -345,6 +350,7 @@ class ModelTester:
                 partial_points_list += [partial]
                 obj_inds += [inds]
                 ids_list += [idss]
+                mmd_list += [mmd]
 
                 # Average timing
                 t += [time.time()]
@@ -361,6 +367,24 @@ class ModelTester:
             except tf.errors.OutOfRangeError:
                 break
 
+        # Gather mmd and respective matched model from mmd_list, also calc mean mmd
+        #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
+        matched_models_list = []
+        mmds = []
+        for idxb, b in enumerate(mmd_list):
+            for pair in mmd_list[idxb]:
+                matched_models_list.append(dataset.complete_points['train'][pair[0]])  # store matched model
+                mmds.append(pair[1])  # store mmd
+
+        matched_models_list = np.array(matched_models_list)
+        matched_models_list = np.reshape(matched_models_list,
+                                         (-1, dataset.batch_num, matched_models_list.shape[1],
+                                          matched_models_list.shape[2]))
+        mmds = np.array(mmds)  # shape: (800,)
+        mmd_mean = np.mean(mmds)
+        print('Test MMD: {:4.5f}'.format(mmd_mean))
+        mmds = np.reshape(mmds, (-1, dataset.batch_num))
+
         if model.config.saving:
             if not exists(join(model.saving_path, 'visu', 'kitti', 'plots')):
                 makedirs(join(model.saving_path, 'visu', 'kitti', 'plots'))
@@ -370,12 +394,15 @@ class ModelTester:
 
             # Plot & save completed pcd code
             all_pcs = [partial_points_list, coarse_list, fine_list]
+            all_dist = [mmds]
             visualize_titles = ['input', 'coarse output', 'fine output']
             for i, id_batch_np in enumerate(ids_list):
                 for j, batch_el_idx in enumerate(id_batch_np):
 
                     car_id = id_batch_np[j].decode().split(".")[0]
                     pcs = [x[i] for x in all_pcs]
+                    dists = [d[i] for d in all_dist]
+                    suptitle = 'Minimal Matching Distance (MMD) = {:4.5f}'.format(dists[0][0])
 
                     # Plot
                     if j == 0:
@@ -386,7 +413,7 @@ class ModelTester:
                         coarse_temp = pcs[1][0, :, :]
                         fine_temp = pcs[2][0, :, :]
                         final_pcs = [partial_temp, coarse_temp, fine_temp]
-                        self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles)
+                        self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
 
                     # Save pcd
                     # Calculate center, rotation and scale

@@ -15,6 +15,7 @@ import numpy as np
 import argparse
 
 # My libs
+from datasets.ShapeNetBenchmark2048 import ShapeNetBenchmark2048Dataset
 from utils.config import Config
 from utils.tester import ModelTester
 from models.KPCN_model import KernelPointCompletionNetwork
@@ -66,10 +67,14 @@ def test_caller(path, step_ind, dataset_path):
 
     # Initiate dataset configuration
     dataset = KittiDataset(config.batch_num, config.num_input_points, dataset_path)
-
-    # Create subsample clouds of the models
     dl0 = 0  # config.first_subsampling_dl
+    # Create subsample clouds of the models
     dataset.load_subsampled_clouds(dl0)
+
+    # Initiate ShapeNet dataset for use as DB in MMD metric  # TODO: for more efficiency, a car-only db could be used
+    shapenet2048_dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points, dataset_path)
+    # Create subsample clouds of the models
+    shapenet2048_dataset.load_subsampled_clouds(dl0)
 
     # Initialize test input pipeline
     dataset.init_test_input_pipeline(config)
@@ -109,7 +114,7 @@ def test_caller(path, step_ind, dataset_path):
 
     print('Start Test')
     print('**********\n')
-    tester.test_kitti_completion(model, dataset)
+    tester.test_kitti_completion(model, dataset, shapenet2048_dataset)
 
 
 if __name__ == '__main__':
