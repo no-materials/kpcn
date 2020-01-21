@@ -258,6 +258,9 @@ class ShapeNetBenchmark2048Dataset(Dataset):
             self.potentials = {}
 
         # Reset potentials
+        print('OOOOOOOIIIIIIIIIII--------')
+        print(split)
+        print(len(self.ids[split]))
         self.potentials[split] = np.random.rand(len(self.ids[split])) * 1e-3
 
         ################
