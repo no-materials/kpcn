@@ -154,7 +154,7 @@ class ModelTester:
                 for i, id_batch_np in enumerate(ids_list):
                     plot_path = join(model.saving_path, 'visu', 'test_on_val',
                                      '{0:s}_{1:.3f}.png'.format(id_batch_np[0].decode().split(".")[0],
-                                                                dataset.config.augment_noise))
+                                                                model.config.augment_noise))
                     if not exists(dirname(plot_path)):
                         makedirs(dirname(plot_path))
                     pcs = [x[i] for x in all_pcs]
