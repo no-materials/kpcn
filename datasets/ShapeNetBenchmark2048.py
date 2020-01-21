@@ -210,6 +210,7 @@ class ShapeNetBenchmark2048Dataset(Dataset):
 
                 for file_iter, file_path in enumerate(paths):
                     # Call loading functions
+                    print(file_path)
                     data = self.load_data(file_path, split_type)
 
                     if subsampling_parameter > 0:
