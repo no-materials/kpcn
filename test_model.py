@@ -61,7 +61,8 @@ def test_caller(path, step_ind, on_val, dataset_path):
     # config.augment_noise = 0.0001
     # config.augment_color = 1.0
     # config.validation_size = 500
-    # config.batch_num = 10
+
+    config.batch_num = 1
 
     # Augmentations
     config.augment_scale_anisotropic = True
