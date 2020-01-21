@@ -30,7 +30,7 @@ from datasets.ShapeNetBenchmark2048 import ShapeNetBenchmark2048Dataset
 #       \***********************/
 #
 
-def test_caller(path, step_ind, on_val, dataset_path):
+def test_caller(path, step_ind, on_val, dataset_path, noise):
     ##########################
     # Initiate the environment
     ##########################
@@ -71,8 +71,8 @@ def test_caller(path, step_ind, on_val, dataset_path):
     config.augment_rotation = 'none'
     config.augment_scale_min = 1.0
     config.augment_scale_max = 1.0
-    config.augment_noise = 0.0
-    config.augment_occlusion = 'none'  # TODO: create occlusion augmentation & vis very noisy input...
+    config.augment_noise = noise
+    config.augment_occlusion = 'none'
 
     ##############
     # Prepare Data
@@ -162,6 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_path')
     parser.add_argument('--on_val', action='store_true')
     parser.add_argument('--double_fold', action='store_true')
+    parser.add_argument('--noise', type=float, default=0.0)
     args = parser.parse_args()
 
     ##########################
@@ -220,4 +221,4 @@ if __name__ == '__main__':
         raise ValueError('The given log does not exists: ' + chosen_log)
 
     # Let's go
-    test_caller(chosen_log, chosen_snapshot, args.on_val, args.dataset_path)
+    test_caller(chosen_log, chosen_snapshot, args.on_val, args.dataset_path, args.noise)
