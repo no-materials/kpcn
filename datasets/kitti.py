@@ -147,14 +147,14 @@ class KittiDataset(Dataset):
         self.partial_points = {'test': []}
         self.ids = {'test': []}
 
-        split_type = 'test_kitti'
+        split_type = 'test'
 
         # Restart timer
         t0 = time.time()
 
         # Load wanted points if possible
         print('\nLoading %s points' % split_type)
-        filename = join(self.data_path, '{0:s}_{1:.3f}_record.pkl'.format(split_type, subsampling_parameter))
+        filename = join(self.data_path, '{0:s}_{1:.3f}_record.pkl'.format('test_kitti', subsampling_parameter))
 
         if exists(filename):
             with open(filename, 'rb') as file:
