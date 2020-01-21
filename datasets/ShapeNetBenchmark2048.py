@@ -148,6 +148,8 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         self.train_data_paths = self.train_data_paths[0:self.num_train]
         self.num_valid = int(len(self.val_data_paths) / batch_num) * batch_num  # 800
         self.val_data_paths = self.val_data_paths[0:self.num_valid]
+        print(self.num_valid)
+        print(self.val_data_paths)
         self.num_test = int(len(self.test_data_paths) / batch_num) * batch_num  # 1184
         self.test_data_paths = self.test_data_paths[0:self.num_test]
 
