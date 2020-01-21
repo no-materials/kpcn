@@ -24,7 +24,7 @@ from models.KPCN_model import KernelPointCompletionNetwork
 from datasets.kitti import KittiDataset
 
 
-def test_caller(path, step_ind, dataset_path):
+def test_caller(path, step_ind, kitti_dataset_path, shapenet_dataset_path):
     ##########################
     # Initiate the environment
     ##########################
@@ -66,13 +66,14 @@ def test_caller(path, step_ind, dataset_path):
     print('*******************')
 
     # Initiate dataset configuration
-    dataset = KittiDataset(config.batch_num, config.num_input_points, dataset_path)
+    dataset = KittiDataset(config.batch_num, config.num_input_points, kitti_dataset_path)
     dl0 = 0  # config.first_subsampling_dl
     # Create subsample clouds of the models
     dataset.load_subsampled_clouds(dl0)
 
     # Initiate ShapeNet dataset for use as DB in MMD metric  # TODO: for more efficiency, a car-only db could be used
-    shapenet2048_dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points, dataset_path)
+    shapenet2048_dataset = ShapeNetBenchmark2048Dataset(config.batch_num, config.num_input_points,
+                                                        shapenet_dataset_path)
     # Create subsample clouds of the models
     shapenet2048_dataset.load_subsampled_clouds(dl0)
 
@@ -121,7 +122,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--saving_path', help="model_log_file_path")
     parser.add_argument('--snap', type=int, default=-1, help="snapshot to restore (-1 for latest snapshot)")
-    parser.add_argument('--dataset_path')
+    parser.add_argument('--kitti_dataset_path')
+    parser.add_argument('--shapenet_dataset_path')
     parser.add_argument('--double_fold', action='store_true')
     args = parser.parse_args()
 
@@ -132,4 +134,4 @@ if __name__ == '__main__':
     if not os.path.exists(chosen_log):
         raise ValueError('The given log does not exists: ' + chosen_log)
 
-    test_caller(chosen_log, chosen_snapshot, args.dataset_path)
+    test_caller(chosen_log, chosen_snapshot, args.kitti_dataset_path, args.shapenet_dataset_path)
