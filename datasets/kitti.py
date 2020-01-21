@@ -147,7 +147,7 @@ class KittiDataset(Dataset):
         self.partial_points = {'test': []}
         self.ids = {'test': []}
 
-        split_type = 'test'
+        split_type = 'test_kitti'
 
         # Restart timer
         t0 = time.time()
