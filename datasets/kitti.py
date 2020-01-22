@@ -110,13 +110,6 @@ class KittiDataset(Dataset):
         # Path of the dataset src folder
         self.dataset_path = dataset_path
 
-        # Path to preprocessed data folder
-        self.data_path = join(dirname(dirname(realpath(__file__))),
-                              'data',
-                              'kitti')
-        if not exists(self.data_path):
-            makedirs(self.data_path)
-
         self.batch_num = batch_num
 
         # Number of threads
@@ -154,7 +147,7 @@ class KittiDataset(Dataset):
 
         # Load wanted points if possible
         print('\nLoading %s points' % split_type)
-        filename = join(self.data_path, '{0:s}_{1:.3f}_record.pkl'.format('test_kitti', subsampling_parameter))
+        filename = join(self.dataset_path, '{0:s}_{1:.3f}_record.pkl'.format('test_kitti', subsampling_parameter))
 
         if exists(filename):
             with open(filename, 'rb') as file:
@@ -163,8 +156,9 @@ class KittiDataset(Dataset):
 
         # Else compute them from original points
         else:
-
+            print('Recomputing test_kitti pkl file')
             for file_iter, file_path in enumerate([f for f in listdir(self.pcd_dir) if f.endswith('.pcd')]):
+                print('Car {}/{}'.format(file_iter, self.num_cars))
                 # Call loading functions
                 data = self.load_cloud(file_path)
                 bbox = np.loadtxt(join(self.bbox_dir, '%s.txt' % file_path.split('.')[0]))
