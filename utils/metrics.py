@@ -30,6 +30,11 @@ def minimal_matching_distance(pcd_fine, dataset):
 
     gt_list = dataset.complete_points['valid']
 
+    print(pcd_fine)
+    print(gt_list[0])
+    print(pcd_fine.shape)
+    print(gt_list[0].shape)
+
     batch_min_cds_and_gt = []
     for i in range(dataset.batch_num):
         for gt in gt_list:
