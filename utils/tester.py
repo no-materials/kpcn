@@ -343,9 +343,6 @@ class ModelTester:
                 coarse, fine, partial, inds, idss, mmd = self.sess.run(ops, {model.dropout_prob: 1.0})
                 t += [time.time()]
 
-                print(model.fine)
-                print(model.fine.shape)
-
                 # Get results and append to list
                 coarse_list += [coarse]
                 fine_list += [fine]
