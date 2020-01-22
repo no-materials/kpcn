@@ -383,8 +383,6 @@ class ShapeNetBenchmark2048Dataset(Dataset):
                     gen_indices = np.argpartition(self.potentials[split], val_num)[:val_num]
                 else:
                     gen_indices = np.random.permutation(val_num)
-                    print('YEEEEEEEEEE')
-                    print(gen_indices)
 
                 # Update potentials
                 self.potentials[split][gen_indices] += 1.0
