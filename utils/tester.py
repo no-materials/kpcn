@@ -373,7 +373,7 @@ class ModelTester:
         mmds = []
         for idxb, b in enumerate(mmd_list):
             for pair in mmd_list[idxb]:
-                matched_models_list.append(dataset.complete_points['train'][pair[0]])  # store matched model
+                matched_models_list.append(dataset.complete_points['valid'][pair[0]])  # store matched model
                 mmds.append(pair[1])  # store mmd
 
         matched_models_list = np.array(matched_models_list)

@@ -28,7 +28,7 @@ def earth_mover(pcd1, pcd2):
 def minimal_matching_distance(pcd_fine, dataset):
     cd_gt_from_fine_list = []
 
-    gt_list = dataset.complete_points['train']
+    gt_list = dataset.complete_points['valid']
 
     batch_min_cds_and_gt = []
     for i in range(dataset.batch_num):
