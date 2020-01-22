@@ -35,6 +35,7 @@ def minimal_matching_distance(pcd_fine, dataset):
     print(pcd_fine.shape)
     print(gt_list[0].shape)
 
+    print(dataset.batch_num)
     batch_min_cds_and_gt = []
     for i in range(dataset.batch_num):
         for gt in gt_list:
