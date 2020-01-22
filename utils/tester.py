@@ -313,6 +313,8 @@ class ModelTester:
 
     def test_kitti_completion(self, model, dataset, shapenet2048_dataset):
 
+        print(model.fine)
+        print(model.fine.shape)
         # Set MMD metric op by passing ShapeNet dataset
         self.minimal_matching_dist = minimal_matching_distance(model.fine, shapenet2048_dataset)
 
