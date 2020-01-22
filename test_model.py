@@ -62,8 +62,8 @@ def test_caller(path, step_ind, on_val, dataset_path, noise):
     # config.augment_color = 1.0
 
     # TODO: use conditional for solo model completion, or read the lines in val.list if on_val true, else test.list
-    config.validation_size = 1
-    config.batch_num = 1
+    # config.validation_size = 1
+    # config.batch_num = 1
 
     # Augmentations
     config.augment_scale_anisotropic = True
