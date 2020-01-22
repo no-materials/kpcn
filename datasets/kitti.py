@@ -74,7 +74,7 @@ class KittiDataset(Dataset):
     # Initiation methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def __init__(self, batch_num, input_pts, dataset_path, input_threads=8):
+    def __init__(self, batch_num, input_pts, dataset_path, pickle_path, input_threads=8):
         """
         Initiation method.
         """
@@ -109,6 +109,7 @@ class KittiDataset(Dataset):
 
         # Path of the dataset src folder
         self.dataset_path = dataset_path
+        self.pickle_path = pickle_path
 
         self.batch_num = batch_num
 
@@ -147,7 +148,7 @@ class KittiDataset(Dataset):
 
         # Load wanted points if possible
         print('\nLoading %s points' % split_type)
-        filename = join(self.dataset_path, '{0:s}_{1:.3f}_record.pkl'.format('test_kitti', subsampling_parameter))
+        filename = join(self.pickle_path, '{0:s}_{1:.3f}_record.pkl'.format('test_kitti', subsampling_parameter))
 
         if exists(filename):
             with open(filename, 'rb') as file:

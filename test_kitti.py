@@ -66,7 +66,7 @@ def test_caller(path, step_ind, kitti_dataset_path, shapenet_dataset_path):
     print('*******************')
 
     # Initiate dataset configuration
-    dataset = KittiDataset(config.batch_num, config.num_input_points, kitti_dataset_path)
+    dataset = KittiDataset(config.batch_num, config.num_input_points, kitti_dataset_path, shapenet_dataset_path)
     dl0 = 0  # config.first_subsampling_dl
     # Create subsample clouds of the models
     dataset.load_subsampled_clouds(dl0)
