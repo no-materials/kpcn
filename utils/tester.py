@@ -372,7 +372,7 @@ class ModelTester:
         mmds = []
         for idxb, b in enumerate(mmd_list):
             for pair in mmd_list[idxb]:
-                matched_models_list.append(dataset.complete_points['valid'][pair[0]])  # store matched model
+                matched_models_list.append(shapenet2048_dataset.complete_points['valid'][pair[0]])  # store matchd model
                 mmds.append(pair[1])  # store mmd
 
         matched_models_list = np.array(matched_models_list)
@@ -385,11 +385,11 @@ class ModelTester:
         mmds = np.reshape(mmds, (-1, dataset.batch_num))
 
         if model.config.saving:
-            if not exists(join(model.saving_path, 'visu', 'kitti', 'plots')):
-                makedirs(join(model.saving_path, 'visu', 'kitti', 'plots'))
+            if not exists(join(model.saving_path, 'visu', 'kitti2', 'plots')):
+                makedirs(join(model.saving_path, 'visu', 'kitti2', 'plots'))
 
-            if not exists(join(model.saving_path, 'visu', 'kitti', 'completions')):
-                makedirs(join(model.saving_path, 'visu', 'kitti', 'completions'))
+            if not exists(join(model.saving_path, 'visu', 'kitti2', 'completions')):
+                makedirs(join(model.saving_path, 'visu', 'kitti2', 'completions'))
 
             # Plot & save completed pcd code
             all_pcs = [partial_points_list, coarse_list, fine_list]
@@ -405,7 +405,7 @@ class ModelTester:
 
                     # Plot
                     if j == 0:
-                        plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
+                        plot_path = join(model.saving_path, 'visu', 'kitti2', 'plots', '%s.png' % car_id)
                         if not exists(dirname(plot_path)):
                             makedirs(dirname(plot_path))
                         partial_temp = pcs[0][0][:model.config.num_input_points, :]
@@ -429,7 +429,7 @@ class ModelTester:
 
                     completion_w = np.dot(pcs[2][j, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
                     completion_w = np.dot(completion_w * scale, rotation.T) + center
-                    pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
+                    pcd_path = join(model.saving_path, 'visu', 'kitti2', 'completions', '%s.pcd' % car_id)
                     if not exists(dirname(pcd_path)):
                         makedirs(dirname(pcd_path))
                     self.save_pcd(pcd_path, completion_w)

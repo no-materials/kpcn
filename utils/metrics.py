@@ -30,11 +30,8 @@ def minimal_matching_distance(pcd_fine, dataset):
 
     gt_list = dataset.complete_points['valid']
 
-    print(tf.expand_dims(pcd_fine[0, :, :], 0))
-    print(tf.expand_dims(pcd_fine[1, :, :], 0))
-    print(pcd_fine[2, :, :])
     batch_min_cds_and_gt = []
-    for i in range(dataset.batch_num):
+    for i in range(1):
         for gt in gt_list:
             cd_gt_from_fine_list += [
                 chamfer(tf.expand_dims(pcd_fine[i, :, :], 0), tf.expand_dims(tf.cast(gt, tf.float32), 0))]
