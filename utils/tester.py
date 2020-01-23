@@ -375,10 +375,10 @@ class ModelTester:
                 matched_models_list.append(shapenet2048_dataset.complete_points['valid'][pair[0]])  # store matchd model
                 mmds.append(pair[1])  # store mmd
 
-        matched_models_list = np.array(matched_models_list)
-        matched_models_list = np.reshape(matched_models_list,
-                                         (-1, dataset.batch_num, matched_models_list.shape[1],
-                                          matched_models_list.shape[2]))
+        # matched_models_list = np.array(matched_models_list)
+        # matched_models_list = np.reshape(matched_models_list,
+        #                                  (-1, dataset.batch_num, matched_models_list.shape[1],
+        #                                   matched_models_list.shape[2]))
         mmds = np.array(mmds)  # shape: (800,)
         mmd_mean = np.mean(mmds)
         print('Test MMD: {:4.5f}'.format(mmd_mean))
