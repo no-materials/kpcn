@@ -26,11 +26,11 @@ def earth_mover(pcd1, pcd2):
 
 
 def minimal_matching_distance(pcd_fine, dataset):
-    cd_gt_from_fine_list = []
+    # cd_gt_from_fine_list = []
 
     gt_list = dataset.complete_points['valid']
 
-    batch_min_cds_and_gt = []
+    # batch_min_cds_and_gt = []
 
     # for i in range(tf.shape(pcd_fine)[0]):
     #     for gt in gt_list:
@@ -41,18 +41,18 @@ def minimal_matching_distance(pcd_fine, dataset):
     #     batch_min_cds_and_gt.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
     #     cd_gt_from_fine_list = []
 
-    def body(dim, i):
+    def body(dim, i, batch_array):
         cd_gt_from_fine_list = []
         for gt in gt_list:
             cd_gt_from_fine_list += [
                 chamfer(tf.expand_dims(pcd_fine[i, :, :], 0), tf.expand_dims(tf.cast(gt, tf.float32), 0))]
         stacked_cds = tf.stack(cd_gt_from_fine_list)
         min_idx = tf.math.argmin(stacked_cds)
-        batch_min_cds_and_gt.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
-        return dim, i + 1
+        batch_array.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
+        return dim, i + 1, batch_array
 
-    cond = lambda dim, i: dim > i
+    cond = lambda dim, i, batch_array: dim > i
 
-    tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0])
+    _, _, batch_min_cds_and_gt = tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0, []])
 
     return batch_min_cds_and_gt
