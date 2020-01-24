@@ -122,7 +122,7 @@ class KittiDataset(Dataset):
         self.bbox_dir = join(self.dataset_path, 'bboxes')
         self.tracklets_dir = join(self.dataset_path, 'tracklets')
 
-        self.num_cars = 2400  # TODO: fix hardcoded value
+        self.num_cars = 2401  # TODO: fix hardcoded value
 
     def load_cloud(self, fname):
         pcd = o3d.io.read_point_cloud(join(self.pcd_dir, fname))
