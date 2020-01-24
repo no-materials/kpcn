@@ -31,13 +31,28 @@ def minimal_matching_distance(pcd_fine, dataset):
     gt_list = dataset.complete_points['valid']
 
     batch_min_cds_and_gt = []
-    for i in range(tf.shape(pcd_fine)[0]):
+
+    # for i in range(tf.shape(pcd_fine)[0]):
+    #     for gt in gt_list:
+    #         cd_gt_from_fine_list += [
+    #             chamfer(tf.expand_dims(pcd_fine[i, :, :], 0), tf.expand_dims(tf.cast(gt, tf.float32), 0))]
+    #     stacked_cds = tf.stack(cd_gt_from_fine_list)
+    #     min_idx = tf.math.argmin(stacked_cds)
+    #     batch_min_cds_and_gt.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
+    #     cd_gt_from_fine_list = []
+
+    def body(dim, i):
+        cd_gt_from_fine_list = []
         for gt in gt_list:
             cd_gt_from_fine_list += [
                 chamfer(tf.expand_dims(pcd_fine[i, :, :], 0), tf.expand_dims(tf.cast(gt, tf.float32), 0))]
         stacked_cds = tf.stack(cd_gt_from_fine_list)
         min_idx = tf.math.argmin(stacked_cds)
         batch_min_cds_and_gt.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
-        cd_gt_from_fine_list = []
+        return dim, i + 1
+
+    cond = lambda dim, i: dim > i
+
+    tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0])
 
     return batch_min_cds_and_gt
