@@ -49,8 +49,8 @@ def minimal_matching_distance(pcd_fine, dataset):
         stacked_cds = tf.stack(cd_gt_from_fine_list)
         min_idx = tf.math.argmin(stacked_cds)
 
-        idxx_array = tf.concat([idxx_array, tf.cast(min_idx, tf.int64)], axis=0)
-        cdd_array = tf.concat([cdd_array, tf.gather(stacked_cds, min_idx)], axis=0)
+        idxx_array = tf.concat([idxx_array, [tf.cast(min_idx, tf.int64)]], axis=0)
+        cdd_array = tf.concat([cdd_array, [tf.gather(stacked_cds, min_idx)]], axis=0)
 
         # batch_array = tf.concat([batch_array, tf.tuple([min_idx, tf.gather(stacked_cds, min_idx)])], axis=0)
         return dim, i + 1, idxx_array, cdd_array
