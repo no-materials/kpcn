@@ -368,10 +368,13 @@ class ModelTester:
 
         # Gather mmd and respective matched model from mmd_list, also calc mean mmd
         #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
+
+        print(mmd_list)
         matched_models_list = []
         mmds = []
         for idxb, b in enumerate(mmd_list):
             for pair in mmd_list[idxb]:
+                print(pair)
                 matched_models_list.append(shapenet2048_dataset.complete_points['valid'][pair[0]])  # store matchd model
                 mmds.append(pair[1])  # store mmd
 
