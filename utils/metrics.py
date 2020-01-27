@@ -54,6 +54,8 @@ def minimal_matching_distance(pcd_fine, dataset):
     def cond(dim, i, batch_array):
         return dim > i
 
-    _, _, batch_min_cds_and_gt = tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0, []])
+    _, _, batch_min_cds_and_gt = tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0, tf.Variable([])],
+                                               shape_invariants=[tf.TensorShape([]), tf.TensorShape([]),
+                                                                 tf.TensorShape([None])])
 
     return batch_min_cds_and_gt
