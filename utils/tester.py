@@ -368,7 +368,6 @@ class ModelTester:
 
         # Gather mmd and respective matched model from mmd_list, also calc mean mmd
         #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
-
         print(mmd_list)
         matched_models_list = []
         mmds = []

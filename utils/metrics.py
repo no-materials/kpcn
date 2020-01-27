@@ -41,22 +41,25 @@ def minimal_matching_distance(pcd_fine, dataset):
     #     batch_min_cds_and_gt.append(tuple((min_idx, tf.gather(stacked_cds, min_idx))))
     #     cd_gt_from_fine_list = []
 
-    def body(dim, i, batch_array):
+    def body(dim, i, idx_array, cd_array):
         cd_gt_from_fine_list = []
         for gt in gt_list:
             cd_gt_from_fine_list += [
                 chamfer(tf.expand_dims(pcd_fine[i, :, :], 0), tf.expand_dims(tf.cast(gt, tf.float32), 0))]
         stacked_cds = tf.stack(cd_gt_from_fine_list)
         min_idx = tf.math.argmin(stacked_cds)
-        batch_array = tf.concat([batch_array, tf.tuple([min_idx, tf.gather(stacked_cds, min_idx)])], axis=0)
-        # batch_array = tf.concat([batch_array, tuple((min_idx, tf.gather(stacked_cds, min_idx)))], axis=0)
-        return dim, i + 1, batch_array
 
-    def cond(dim, i, batch_array):
+        idx_array = tf.concat([idx_array, min_idx], axis=0)
+        cd_array = tf.concat([cd_array, tf.gather(stacked_cds, min_idx)], axis=0)
+
+        # batch_array = tf.concat([batch_array, tf.tuple([min_idx, tf.gather(stacked_cds, min_idx)])], axis=0)
+        return dim, i + 1, idx_array, cd_array
+
+    def cond(dim, i, idx_array, cd_array):
         return dim > i
 
-    _, _, batch_min_cds_and_gt = tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0, tf.Variable([])],
-                                               shape_invariants=[tf.TensorShape([]), tf.TensorShape([]),
-                                                                 tf.TensorShape([None])])
+    _, _, idx_array, cd_array = tf.while_loop(cond, body, [tf.shape(pcd_fine)[0], 0, tf.Variable([]), tf.Variable([])],
+                                              shape_invariants=[tf.TensorShape([]), tf.TensorShape([]),
+                                                                tf.TensorShape([None]), tf.TensorShape([None])])
 
-    return batch_min_cds_and_gt
+    return tf.tuple(idx_array, cd_array)
