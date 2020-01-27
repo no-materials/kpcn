@@ -368,7 +368,6 @@ class ModelTester:
 
         # Gather mmd and respective matched model from mmd_list, also calc mean mmd
         #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
-        print(mmd_list)
         matched_models_list = []
         mmds = []
         for idxb, pair in enumerate(mmd_list):
@@ -381,11 +380,11 @@ class ModelTester:
         # matched_models_list = np.reshape(matched_models_list,
         #                                  (-1, dataset.batch_num, matched_models_list.shape[1],
         #                                   matched_models_list.shape[2]))
-        mmds = np.array(mmds)  # shape: (800,)
+        mmds = np.array(mmds)  # shape: (2401,)
         mmd_mean = np.mean(mmds)
         print('Test MMD: {:4.5f}'.format(mmd_mean))
         print(mmds.shape)
-        mmds = np.reshape(mmds, (-1, dataset.batch_num))
+        mmds = np.reshape(mmds[:-1], (-1, dataset.batch_num))
         print(mmds.shape)
 
         if model.config.saving:
