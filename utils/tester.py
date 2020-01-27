@@ -373,6 +373,7 @@ class ModelTester:
         matched_models_list = []
         mmds = []
         for idxb, b in enumerate(mmd_list):
+            print("b ----->", b)
             for pair in mmd_list[idxb]:
                 print(pair)
                 matched_models_list.append(shapenet2048_dataset.complete_points['valid'][pair[0]])  # store matchd model
