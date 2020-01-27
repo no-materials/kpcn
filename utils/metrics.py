@@ -65,4 +65,4 @@ def minimal_matching_distance(pcd_fine, dataset):
                                               shape_invariants=[tf.TensorShape([]), tf.TensorShape([]),
                                                                 tf.TensorShape([None]), tf.TensorShape([None])])
 
-    return tf.tuple(idx_array, cd_array)
+    return idx_array, cd_array
