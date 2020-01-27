@@ -371,12 +371,11 @@ class ModelTester:
         print(mmd_list)
         matched_models_list = []
         mmds = []
-        for idxb, b in enumerate(mmd_list):
-            print("b ----->", b)
-            for pair in mmd_list[idxb]:
-                print(pair)
-                matched_models_list.append(shapenet2048_dataset.complete_points['valid'][pair[0]])  # store matchd model
-                mmds.append(pair[1])  # store mmd
+        for idxb, pair in enumerate(mmd_list):
+            # for idd in pair[0]:
+            #     matched_models_list.append(shapenet2048_dataset.complete_points['valid'][idd])  # store matchd model
+            for mmd in pair[1]:
+                mmds.append(mmd)  # store mmd
 
         # matched_models_list = np.array(matched_models_list)
         # matched_models_list = np.reshape(matched_models_list,
@@ -385,7 +384,9 @@ class ModelTester:
         mmds = np.array(mmds)  # shape: (800,)
         mmd_mean = np.mean(mmds)
         print('Test MMD: {:4.5f}'.format(mmd_mean))
+        print(mmds.shape)
         mmds = np.reshape(mmds, (-1, dataset.batch_num))
+        print(mmds.shape)
 
         if model.config.saving:
             if not exists(join(model.saving_path, 'visu', 'kitti2', 'plots')):
