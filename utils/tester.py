@@ -241,13 +241,14 @@ class ModelTester:
                     break
 
             print('Retrieval from db done! Time elapsed: {} seconds'.format(time.time() - retrieval_time_start))
-            #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
+            #  mmd_list has shape: [([idx1, idx2, idx3, ..., idx16], [cd1, cd2, cd3, ..., cd16]), (...),...]
             matched_models_list = []
             mmds = []
-            for idxb, b in enumerate(mmd_list):
-                for pair in mmd_list[idxb]:
-                    matched_models_list.append(dataset.complete_points['train'][pair[0]])  # store matched model
-                    mmds.append(pair[1])  # store mmd
+            for idxb, pair in enumerate(mmd_list):
+                for idd in pair[0]:
+                    matched_models_list.append(dataset.complete_points['valid'][idd])  # store matched model
+                for mmd in pair[1]:
+                    mmds.append(mmd)  # store mmd
 
             matched_models_list = np.array(matched_models_list)
             matched_models_list = np.reshape(matched_models_list,
@@ -367,7 +368,7 @@ class ModelTester:
                 break
 
         # Gather mmd and respective matched model from mmd_list, also calc mean mmd
-        #  mmd_list has shape: [[(idx1, cd1), (idx2, cd2),...,(idx16, cd16)], [...],...]
+        #  mmd_list has shape: [([idx1, idx2, idx3, ..., idx16], [cd1, cd2, cd3, ..., cd16]), (...),...]
         matched_models_list = []
         mmds = []
         for idxb, pair in enumerate(mmd_list):
@@ -383,16 +384,14 @@ class ModelTester:
         mmds = np.array(mmds)  # shape: (2401,)
         mmd_mean = np.mean(mmds)
         print('Test MMD: {:4.5f}'.format(mmd_mean))
-        print(mmds.shape)
         mmds = np.reshape(mmds[:-1], (-1, dataset.batch_num))
-        print(mmds.shape)
 
         if model.config.saving:
-            if not exists(join(model.saving_path, 'visu', 'kitti2', 'plots')):
-                makedirs(join(model.saving_path, 'visu', 'kitti2', 'plots'))
+            if not exists(join(model.saving_path, 'visu', 'kitti', 'plots')):
+                makedirs(join(model.saving_path, 'visu', 'kitti', 'plots'))
 
-            if not exists(join(model.saving_path, 'visu', 'kitti2', 'completions')):
-                makedirs(join(model.saving_path, 'visu', 'kitti2', 'completions'))
+            if not exists(join(model.saving_path, 'visu', 'kitti', 'completions')):
+                makedirs(join(model.saving_path, 'visu', 'kitti', 'completions'))
 
             # Plot & save completed pcd code
             all_pcs = [partial_points_list, coarse_list, fine_list]
@@ -408,7 +407,7 @@ class ModelTester:
 
                     # Plot
                     if j == 0:
-                        plot_path = join(model.saving_path, 'visu', 'kitti2', 'plots', '%s.png' % car_id)
+                        plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)
                         if not exists(dirname(plot_path)):
                             makedirs(dirname(plot_path))
                         partial_temp = pcs[0][0][:model.config.num_input_points, :]
@@ -432,7 +431,7 @@ class ModelTester:
 
                     completion_w = np.dot(pcs[2][j, :, :], [[1, 0, 0], [0, 0, 1], [0, 1, 0]])
                     completion_w = np.dot(completion_w * scale, rotation.T) + center
-                    pcd_path = join(model.saving_path, 'visu', 'kitti2', 'completions', '%s.pcd' % car_id)
+                    pcd_path = join(model.saving_path, 'visu', 'kitti', 'completions', '%s.pcd' % car_id)
                     if not exists(dirname(pcd_path)):
                         makedirs(dirname(pcd_path))
                     self.save_pcd(pcd_path, completion_w)
