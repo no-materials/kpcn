@@ -52,7 +52,7 @@ class ModelVisualizer:
         self.saver = tf.train.Saver(my_vars, max_to_keep=100)
 
         # Create a session for running Ops on the Graph.
-        on_CPU = False
+        on_CPU = True
         if on_CPU:
             cProto = tf.ConfigProto(device_count={'GPU': 0})
         else:

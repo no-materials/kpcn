@@ -107,7 +107,7 @@ def visu_caller(path, step_ind, deform_idx, dataset_path):
     t1 = time.time()
 
     if config.dataset.startswith('ShapeNetV1') or config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
-        model = KernelPointCompletionNetwork(dataset.flat_inputs, config, args.double_fold)
+        model = KernelPointCompletionNetwork(dataset.flat_inputs, config, False)
     else:
         raise ValueError('Unsupported dataset : ' + config.dataset)
 
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('--saving_path', default='last_ShapeNet2048')
     parser.add_argument('--dataset_path')
     parser.add_argument('--snap', type=int, default=-1, help="snapshot to restore (-1 for latest snapshot)")
-    parser.add_argument('--dataset_path')
+    parser.add_argument('--deformation', type=int, default=0, help="idx of deformation op")
     args = parser.parse_args()
 
     ##########################
@@ -213,7 +213,7 @@ if __name__ == '__main__':
         raise ValueError('The given log does not exists: ' + chosen_log)
     #
 
-    chosen_deformation = 0
+    chosen_deformation = args.deformation
 
     # Let's go
     visu_caller(chosen_log, chosen_snapshot, chosen_deformation, args.dataset_path)
