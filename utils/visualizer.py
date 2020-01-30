@@ -408,4 +408,358 @@ class ModelVisualizer:
 
         return
 
+    def show_deformable_kernels(self, model, dataset, deform_idx=0):
 
+        ##########################################
+        # First choose the visualized deformations
+        ##########################################
+
+        # List all deformation ops
+        all_ops = [op for op in tf.get_default_graph().get_operations() if op.name.startswith('KernelPointNetwork')
+                   and op.name.endswith('deformed_KP')]
+
+        if len(all_ops) > 0:
+            print('\nPossible deformed indices:')
+            for i, t in enumerate(all_ops):
+                print(i, ': ', t.name)
+        else:
+            raise ValueError('No deformable convolution found in this network')
+
+        # Chosen deformations
+        deformed_KP_tensor = all_ops[deform_idx].outputs[0]
+
+        # Layer index
+        layer_idx = int(all_ops[deform_idx].name.split('/')[1].split('_')[-1])
+
+        # Original kernel point positions
+        KP_vars = [v for v in tf.global_variables() if 'kernel_points' in v.name]
+        tmp = np.array(all_ops[deform_idx].name.split('/'))
+        test = []
+        for v in KP_vars:
+            cmp = np.array(v.name.split('/'))
+            l = min(len(cmp), len(tmp))
+            cmp = cmp[:l]
+            tmp = tmp[:l]
+            test += [np.sum(cmp == tmp)]
+        chosen_KP = np.argmax(test)
+
+        print('You chose to visualize the output of operation named: ' + all_ops[deform_idx].name)
+
+        print('\n****************************************************************************')
+
+        # Run model on all test examples
+        # ******************************
+
+        # Initialise iterator with test data
+        self.sess.run(dataset.test_init_op)
+        count = 0
+
+        while True:
+            try:
+
+                # Run one step of the model
+                t = [time.time()]
+                ops = (deformed_KP_tensor,
+                       model.inputs['points'],
+                       model.inputs['features'],
+                       model.inputs['pools'],
+                       model.inputs['in_batches'],
+                       KP_vars)
+                stacked_deformed_KP, \
+                all_points, \
+                all_colors, \
+                all_pools, \
+                in_batches, \
+                original_KPs = self.sess.run(ops, {model.dropout_prob: 1.0})
+                t += [time.time()]
+                count += in_batches.shape[0]
+
+                # Stack all batches
+                max_ind = np.max(in_batches)
+                stacked_batches = []
+                for b_i, b in enumerate(in_batches):
+                    stacked_batches += [b[b < max_ind - 0.5] * 0 + b_i]
+                stacked_batches = np.hstack(stacked_batches)
+
+                # Find batches at wanted layer
+                for l in range(model.config.num_layers - 1):
+                    if l >= layer_idx:
+                        break
+                    stacked_batches = stacked_batches[all_pools[l][:, 0]]
+
+                # Get each example and update top_activations
+                in_points = []
+                in_colors = []
+                deformed_KP = []
+                points = []
+                lookuptrees = []
+                for b_i, b in enumerate(in_batches):
+                    b = b[b < max_ind - 0.5]
+                    in_points += [all_points[0][b]]
+                    deformed_KP += [stacked_deformed_KP[stacked_batches == b_i]]
+                    points += [all_points[layer_idx][stacked_batches == b_i]]
+                    lookuptrees += [KDTree(points[-1])]
+                    if all_colors.shape[1] == 4:
+                        in_colors += [all_colors[b, 1:]]
+                    else:
+                        in_colors += [None]
+
+                print('New batch size : ', len(in_batches))
+
+                ###########################
+                # Interactive visualization
+                ###########################
+
+                # Create figure for features
+                fig1 = mlab.figure('Features', bgcolor=(1.0, 1.0, 1.0), size=(1280, 920))
+                fig1.scene.parallel_projection = False
+
+                # Indices
+                global obj_i, point_i, plots, offsets, p_scale, show_in_p, aim_point
+                p_scale = 0.03
+                obj_i = 0
+                point_i = 0
+                plots = {}
+                offsets = False
+                show_in_p = 2
+                aim_point = np.zeros((1, 3))
+
+                def picker_callback(picker):
+                    """ Picker callback: this get called when on pick events.
+                    """
+                    global plots, aim_point
+
+                    if 'in_points' in plots:
+                        if plots['in_points'].actor.actor._vtk_obj in [o._vtk_obj for o in picker.actors]:
+                            point_rez = \
+                            plots['in_points'].glyph.glyph_source.glyph_source.output.points.to_array().shape[0]
+                            new_point_i = int(np.floor(picker.point_id / point_rez))
+                            if new_point_i < len(plots['in_points'].mlab_source.points):
+                                # Get closest point in the layer we are interested in
+                                aim_point = plots['in_points'].mlab_source.points[new_point_i:new_point_i + 1]
+                                update_scene()
+
+                    if 'points' in plots:
+                        if plots['points'].actor.actor._vtk_obj in [o._vtk_obj for o in picker.actors]:
+                            point_rez = plots['points'].glyph.glyph_source.glyph_source.output.points.to_array().shape[
+                                0]
+                            new_point_i = int(np.floor(picker.point_id / point_rez))
+                            if new_point_i < len(plots['points'].mlab_source.points):
+                                # Get closest point in the layer we are interested in
+                                aim_point = plots['points'].mlab_source.points[new_point_i:new_point_i + 1]
+                                update_scene()
+
+                def update_scene():
+                    global plots, offsets, p_scale, show_in_p, aim_point, point_i
+
+                    # Get the current view
+                    v = mlab.view()
+                    roll = mlab.roll()
+
+                    #  clear figure
+                    for key in plots.keys():
+                        plots[key].remove()
+
+                    plots = {}
+
+                    # Plot new data feature
+                    p = points[obj_i]
+
+                    # Rescale points for visu
+                    p = (p * 1.5 / model.config.in_radius)
+
+                    # Show point cloud
+                    if show_in_p <= 1:
+                        plots['points'] = mlab.points3d(p[:, 0],
+                                                        p[:, 1],
+                                                        p[:, 2],
+                                                        resolution=8,
+                                                        scale_factor=p_scale,
+                                                        scale_mode='none',
+                                                        color=(0, 1, 1),
+                                                        figure=fig1)
+
+                    if show_in_p >= 1:
+
+                        # Get points and colors
+                        in_p = in_points[obj_i]
+                        in_p = (in_p * 1.5 / model.config.in_radius)
+
+                        # Color point cloud if possible
+                        in_c = in_colors[obj_i]
+                        if in_c is not None:
+
+                            # Primitives
+                            scalars = np.arange(len(in_p))  # Key point: set an integer for each point
+
+                            # Define color table (including alpha), which must be uint8 and [0,255]
+                            colors = np.hstack((in_c, np.ones_like(in_c[:, :1])))
+                            colors = (colors * 255).astype(np.uint8)
+
+                            plots['in_points'] = mlab.points3d(in_p[:, 0],
+                                                               in_p[:, 1],
+                                                               in_p[:, 2],
+                                                               scalars,
+                                                               resolution=8,
+                                                               scale_factor=p_scale * 0.8,
+                                                               scale_mode='none',
+                                                               figure=fig1)
+                            plots['in_points'].module_manager.scalar_lut_manager.lut.table = colors
+
+                        else:
+
+                            plots['in_points'] = mlab.points3d(in_p[:, 0],
+                                                               in_p[:, 1],
+                                                               in_p[:, 2],
+                                                               resolution=8,
+                                                               scale_factor=p_scale * 0.8,
+                                                               scale_mode='none',
+                                                               figure=fig1)
+
+                    # Get KP locations
+                    rescaled_aim_point = aim_point * model.config.in_radius / 1.5
+                    point_i = lookuptrees[obj_i].query(rescaled_aim_point, return_distance=False)[0][0]
+                    if offsets:
+                        KP = points[obj_i][point_i] + deformed_KP[obj_i][point_i]
+                        scals = np.ones_like(KP[:, 0])
+                    else:
+                        KP = points[obj_i][point_i] + original_KPs[chosen_KP]
+                        scals = np.zeros_like(KP[:, 0])
+
+                    KP = (KP * 1.5 / model.config.in_radius)
+
+                    plots['KP'] = mlab.points3d(KP[:, 0],
+                                                KP[:, 1],
+                                                KP[:, 2],
+                                                scals,
+                                                colormap='autumn',
+                                                resolution=8,
+                                                scale_factor=1.2 * p_scale,
+                                                scale_mode='none',
+                                                vmin=0,
+                                                vmax=1,
+                                                figure=fig1)
+
+                    if True:
+                        plots['center'] = mlab.points3d(p[point_i, 0],
+                                                        p[point_i, 1],
+                                                        p[point_i, 2],
+                                                        scale_factor=1.1 * p_scale,
+                                                        scale_mode='none',
+                                                        color=(0, 1, 0),
+                                                        figure=fig1)
+
+                        # New title
+                        plots['title'] = mlab.title(str(obj_i), color=(0, 0, 0), size=0.3, height=0.01)
+                        text = '<--- (press g for previous)' + 50 * ' ' + '(press h for next) --->'
+                        plots['text'] = mlab.text(0.01, 0.01, text, color=(0, 0, 0), width=0.98)
+                        plots['orient'] = mlab.orientation_axes()
+
+                    # Set the saved view
+                    mlab.view(*v)
+                    mlab.roll(roll)
+
+                    return
+
+                def animate_kernel():
+                    global plots, offsets, p_scale, show_in_p
+
+                    # Get KP locations
+
+                    KP_def = points[obj_i][point_i] + deformed_KP[obj_i][point_i]
+                    KP_def = (KP_def * 1.5 / model.config.in_radius)
+                    KP_def_color = (1, 0, 0)
+
+                    KP_rigid = points[obj_i][point_i] + original_KPs[chosen_KP]
+                    KP_rigid = (KP_rigid * 1.5 / model.config.in_radius)
+                    KP_rigid_color = (1, 0.7, 0)
+
+                    if offsets:
+                        t_list = np.linspace(0, 1, 150, dtype=np.float32)
+                    else:
+                        t_list = np.linspace(1, 0, 150, dtype=np.float32)
+
+                    @mlab.animate(delay=10)
+                    def anim():
+                        for t in t_list:
+                            plots['KP'].mlab_source.set(x=t * KP_def[:, 0] + (1 - t) * KP_rigid[:, 0],
+                                                        y=t * KP_def[:, 1] + (1 - t) * KP_rigid[:, 1],
+                                                        z=t * KP_def[:, 2] + (1 - t) * KP_rigid[:, 2],
+                                                        scalars=t * np.ones_like(KP_def[:, 0]))
+
+                            yield
+
+                    anim()
+
+                    return
+
+                def keyboard_callback(vtk_obj, event):
+                    global obj_i, point_i, offsets, p_scale, show_in_p
+
+                    if vtk_obj.GetKeyCode() in ['b', 'B']:
+                        p_scale /= 1.5
+                        update_scene()
+
+                    elif vtk_obj.GetKeyCode() in ['n', 'N']:
+                        p_scale *= 1.5
+                        update_scene()
+
+                    if vtk_obj.GetKeyCode() in ['g', 'G']:
+                        obj_i = (obj_i - 1) % len(deformed_KP)
+                        point_i = 0
+                        update_scene()
+
+                    elif vtk_obj.GetKeyCode() in ['h', 'H']:
+                        obj_i = (obj_i + 1) % len(deformed_KP)
+                        point_i = 0
+                        update_scene()
+
+                    elif vtk_obj.GetKeyCode() in ['k', 'K']:
+                        offsets = not offsets
+                        animate_kernel()
+
+                    elif vtk_obj.GetKeyCode() in ['z', 'Z']:
+                        show_in_p = (show_in_p + 1) % 3
+                        update_scene()
+
+                    elif vtk_obj.GetKeyCode() in ['0']:
+
+                        print('Saving')
+
+                        # Find a new name
+                        file_i = 0
+                        file_name = 'KP_{:03d}.ply'.format(file_i)
+                        files = [f for f in listdir('KP_clouds') if f.endswith('.ply')]
+                        while file_name in files:
+                            file_i += 1
+                            file_name = 'KP_{:03d}.ply'.format(file_i)
+
+                        KP_deform = points[obj_i][point_i] + deformed_KP[obj_i][point_i]
+                        KP_normal = points[obj_i][point_i] + original_KPs[chosen_KP]
+
+                        # Save
+                        write_ply(join('KP_clouds', file_name),
+                                  [in_points[obj_i], in_colors[obj_i]],
+                                  ['x', 'y', 'z', 'red', 'green', 'blue'])
+                        write_ply(join('KP_clouds', 'KP_{:03d}_deform.ply'.format(file_i)),
+                                  [KP_deform],
+                                  ['x', 'y', 'z'])
+                        write_ply(join('KP_clouds', 'KP_{:03d}_normal.ply'.format(file_i)),
+                                  [KP_normal],
+                                  ['x', 'y', 'z'])
+                        print('OK')
+
+                    return
+
+                # Draw a first plot
+                pick_func = fig1.on_mouse_pick(picker_callback)
+                pick_func.tolerance = 0.01
+                update_scene()
+                fig1.scene.interactor.add_observer('KeyPressEvent', keyboard_callback)
+                mlab.show()
+
+
+
+
+            except tf.errors.OutOfRangeError:
+                break
