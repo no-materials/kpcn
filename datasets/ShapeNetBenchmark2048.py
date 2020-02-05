@@ -110,13 +110,6 @@ class ShapeNetBenchmark2048Dataset(Dataset):
         # Path of the dataset src folder
         self.dataset_path = dataset_path
 
-        # Path to preprocessed data folder
-        # self.data_path = join(dirname(dirname(realpath(__file__))),
-        #                       'data',
-        #                       'shapenetBenchmark2048')
-        # if not exists(self.data_path):
-        #     makedirs(self.data_path)
-
         self.batch_num = batch_num
 
         # Number of threads

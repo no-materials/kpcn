@@ -61,9 +61,19 @@ def test_caller(path, step_ind, on_val, dataset_path, noise, calc_tsne):
     # config.augment_noise = 0.0001
     # config.augment_color = 1.0
 
-    # TODO: use conditional for solo model completion, or read the lines in val.list if on_val true, else test.list
-    # config.validation_size = 1
-    # config.batch_num = 1
+    # Adjust batch num if only a single model is to be completed
+    if on_val:
+        val_data_paths = sorted([os.path.join(dataset_path, 'val', 'partial', k.rstrip() + '.h5')
+                                 for k in open(os.path.join(dataset_path, 'val.list').readlines())])
+        if int(len(val_data_paths)) == 1:
+            config.validation_size = 1
+            config.batch_num = 1
+    else:
+        test_data_paths = sorted([os.path.join(dataset_path, 'test', 'partial', k.rstrip() + '.h5')
+                                 for k in open(os.path.join(dataset_path, 'val.list').readlines())])
+        if int(len(test_data_paths)) == 1:
+            config.validation_size = 1
+            config.batch_num = 1
 
     # Augmentations
     config.augment_scale_anisotropic = True
