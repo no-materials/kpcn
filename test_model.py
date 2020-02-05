@@ -30,7 +30,7 @@ from datasets.ShapeNetBenchmark2048 import ShapeNetBenchmark2048Dataset
 #       \***********************/
 #
 
-def test_caller(path, step_ind, on_val, dataset_path, noise):
+def test_caller(path, step_ind, on_val, dataset_path, noise, calc_tsne):
     ##########################
     # Initiate the environment
     ##########################
@@ -141,7 +141,7 @@ def test_caller(path, step_ind, on_val, dataset_path, noise):
     print('**********\n')
 
     if config.dataset.startswith('ShapeNetV1') or config.dataset.startswith("pc_shapenetCompletionBenchmark2048"):
-        tester.test_completion(model, dataset, on_val)
+        tester.test_completion(model, dataset, on_val, calc_tsne)
     else:
         raise ValueError('Unsupported dataset')
 
@@ -163,6 +163,7 @@ if __name__ == '__main__':
     parser.add_argument('--on_val', action='store_true')
     parser.add_argument('--double_fold', action='store_true')
     parser.add_argument('--noise', type=float, default=0.0)
+    parser.add_argument('--calc_tsne', action='store_true')
     args = parser.parse_args()
 
     ##########################
@@ -221,4 +222,4 @@ if __name__ == '__main__':
         raise ValueError('The given log does not exists: ' + chosen_log)
 
     # Let's go
-    test_caller(chosen_log, chosen_snapshot, args.on_val, args.dataset_path, args.noise)
+    test_caller(chosen_log, chosen_snapshot, args.on_val, args.dataset_path, args.noise, args.calc_tsne)

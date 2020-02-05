@@ -78,7 +78,7 @@ class ModelTester:
     # Test main methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def test_completion(self, model, dataset, on_val, num_votes=100):
+    def test_completion(self, model, dataset, on_val, calc_tsne, num_votes=100):
 
         mean_dt = np.zeros(2)
         last_display = time.time()
@@ -166,39 +166,40 @@ class ModelTester:
                     final_pcs = [partial_temp, coarse_temp, fine_temp, complete_temp]
                     self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
 
-            # t-SNE plot (use PCA_50_dims first for dim reduction)
-            features_np = np.array(latent_feat_list)
-            features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
+            if calc_tsne:
+                # t-SNE plot (use PCA_50_dims first for dim reduction)
+                features_np = np.array(latent_feat_list)
+                features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
-            ids_np = np.concatenate(ids_list, axis=None)
-            category_ids = np.array([dataset.synset_to_category[id_el.decode().split("/")[0]] for id_el in ids_np])
+                ids_np = np.concatenate(ids_list, axis=None)
+                category_ids = np.array([dataset.synset_to_category[id_el.decode().split("/")[0]] for id_el in ids_np])
 
-            df = pd.DataFrame(features)
-            df['y'] = category_ids
-            pca_50 = PCA(n_components=50)
-            pca_result_50 = pca_50.fit_transform(features)
-            print('Cumulative explained variation for 50 principal components: {}'.format(
-                np.sum(pca_50.explained_variance_ratio_)))
+                df = pd.DataFrame(features)
+                df['y'] = category_ids
+                pca_50 = PCA(n_components=50)
+                pca_result_50 = pca_50.fit_transform(features)
+                print('Cumulative explained variation for 50 principal components: {}'.format(
+                    np.sum(pca_50.explained_variance_ratio_)))
 
-            time_start = time.time()
-            tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
-            tsne_pca_results = tsne.fit_transform(pca_result_50)
-            print('t-SNE done! Time elapsed: {} seconds'.format(time.time() - time_start))
-            df['tsne-pca50-one'] = tsne_pca_results[:, 0]
-            df['tsne-pca50-two'] = tsne_pca_results[:, 1]
+                time_start = time.time()
+                tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
+                tsne_pca_results = tsne.fit_transform(pca_result_50)
+                print('t-SNE done! Time elapsed: {} seconds'.format(time.time() - time_start))
+                df['tsne-pca50-one'] = tsne_pca_results[:, 0]
+                df['tsne-pca50-two'] = tsne_pca_results[:, 1]
 
-            plt.figure(figsize=(9, 9))
-            scatterplot = sns.scatterplot(
-                x="tsne-pca50-one", y="tsne-pca50-two",
-                hue="y",
-                palette=sns.color_palette("hls", 8),
-                data=df.loc[:, :],
-                legend="full",
-                alpha=0.3,
-            )
-            fig = scatterplot.get_figure()
-            fig.savefig('PCA50_tsne_val.png')
-            plt.close(fig)
+                plt.figure(figsize=(9, 9))
+                scatterplot = sns.scatterplot(
+                    x="tsne-pca50-one", y="tsne-pca50-two",
+                    hue="y",
+                    palette=sns.color_palette("hls", 8),
+                    data=df.loc[:, :],
+                    legend="full",
+                    alpha=0.3,
+                )
+                fig = scatterplot.get_figure()
+                fig.savefig('PCA50_tsne_val.png')
+                plt.close(fig)
 
         else:  # on test set
 
@@ -281,34 +282,35 @@ class ModelTester:
                     final_pcs = [partial_temp, coarse_temp, fine_temp, matched_temp]
                     self.plot_pc_compare_views(plot_path, final_pcs, visualize_titles, suptitle=suptitle)
 
-            # t-SNE plot (use PCA_50_dims first for dim reduction)
-            features_np = np.array(latent_feat_list)
-            features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
+            if calc_tsne:
+                # t-SNE plot (use PCA_50_dims first for dim reduction)
+                features_np = np.array(latent_feat_list)
+                features = np.reshape(features_np, (features_np.shape[0] * features_np.shape[1], -1))  # 50 * 16, 2048
 
-            df = pd.DataFrame(features)
-            pca_50 = PCA(n_components=50)
-            pca_result_50 = pca_50.fit_transform(features)
-            print('Cumulative explained variation for 50 principal components: {}'.format(
-                np.sum(pca_50.explained_variance_ratio_)))
+                df = pd.DataFrame(features)
+                pca_50 = PCA(n_components=50)
+                pca_result_50 = pca_50.fit_transform(features)
+                print('Cumulative explained variation for 50 principal components: {}'.format(
+                    np.sum(pca_50.explained_variance_ratio_)))
 
-            time_start = time.time()
-            tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
-            tsne_pca_results = tsne.fit_transform(pca_result_50)
-            print('t-SNE done! Time elapsed: {} seconds'.format(time.time() - time_start))
-            df['tsne-pca50-one'] = tsne_pca_results[:, 0]
-            df['tsne-pca50-two'] = tsne_pca_results[:, 1]
+                time_start = time.time()
+                tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
+                tsne_pca_results = tsne.fit_transform(pca_result_50)
+                print('t-SNE done! Time elapsed: {} seconds'.format(time.time() - time_start))
+                df['tsne-pca50-one'] = tsne_pca_results[:, 0]
+                df['tsne-pca50-two'] = tsne_pca_results[:, 1]
 
-            plt.figure(figsize=(9, 9))
-            scatterplot = sns.scatterplot(
-                x="tsne-pca50-one", y="tsne-pca50-two",
-                palette=sns.color_palette("hls", 8),
-                data=df.loc[:, :],
-                legend="full",
-                alpha=0.3,
-            )
-            fig = scatterplot.get_figure()
-            fig.savefig('PCA50_tsne_test.png')
-            plt.close(fig)
+                plt.figure(figsize=(9, 9))
+                scatterplot = sns.scatterplot(
+                    x="tsne-pca50-one", y="tsne-pca50-two",
+                    palette=sns.color_palette("hls", 8),
+                    data=df.loc[:, :],
+                    legend="full",
+                    alpha=0.3,
+                )
+                fig = scatterplot.get_figure()
+                fig.savefig('PCA50_tsne_test.png')
+                plt.close(fig)
 
         return
 
