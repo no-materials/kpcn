@@ -64,13 +64,13 @@ def test_caller(path, step_ind, on_val, dataset_path, noise, calc_tsne):
     # Adjust batch num if only a single model is to be completed
     if on_val:
         val_data_paths = sorted([os.path.join(dataset_path, 'val', 'partial', k.rstrip() + '.h5')
-                                 for k in open(os.path.join(dataset_path, 'val.list').readlines())])
+                                 for k in open(os.path.join(dataset_path, 'val.list')).readlines()])
         if int(len(val_data_paths)) == 1:
             config.validation_size = 1
             config.batch_num = 1
     else:
         test_data_paths = sorted([os.path.join(dataset_path, 'test', 'partial', k.rstrip() + '.h5')
-                                 for k in open(os.path.join(dataset_path, 'val.list').readlines())])
+                                 for k in open(os.path.join(dataset_path, 'val.list')).readlines()])
         if int(len(test_data_paths)) == 1:
             config.validation_size = 1
             config.batch_num = 1
