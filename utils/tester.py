@@ -407,6 +407,7 @@ class ModelTester:
                     dists = [d[i] for d in all_dist]
                     suptitle = 'Minimal Matching Distance (MMD) = {:4.5f}'.format(dists[0][0])
 
+                    print(dists[0])
                     # Plot
                     if j == 0:
                         plot_path = join(model.saving_path, 'visu', 'kitti', 'plots', '%s.png' % car_id)

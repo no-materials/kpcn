@@ -603,8 +603,9 @@ class ModelVisualizer:
                                                                resolution=8,
                                                                scale_factor=p_scale * 0.8,
                                                                scale_mode='none',
+                                                               color=(0.8, 0.8, 0.8),
                                                                figure=fig1)
-                            plots['in_points'].module_manager.scalar_lut_manager.lut.table = colors
+                            # plots['in_points'].module_manager.scalar_lut_manager.lut.table = colors
 
                         else:
 

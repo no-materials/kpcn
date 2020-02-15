@@ -114,6 +114,8 @@ def compare_trainings(list_of_paths, list_of_labels=None):
     # ******************
 
     all_epochs = []
+    all_epochs_val = []
+    all_loss_val = []
     all_loss = []
     all_lr = []
     all_times = []
@@ -141,24 +143,30 @@ def compare_trainings(list_of_paths, list_of_labels=None):
         smooth_n = int(steps_per_epoch * smooth_epochs)
 
         # Load results
-        steps, L_out, L_reg, L_p, coarse_EM, fine_CD, mixed_loss, t, memory = load_training_results(path)
-        # epochs, steps, coarse_EM, fine_CD, mixed_loss = load_validation_results(path)
-        all_epochs += [np.array(steps) / steps_per_epoch]
-        all_loss += [running_mean(mixed_loss, smooth_n)]
-        all_times += [t]
+        # steps, L_out, L_reg, L_p, coarse_EM, fine_CD, mixed_loss, t, memory = load_training_results(path)
+        epochs_val, steps_val, coarse_EM_val, fine_CD_val, mixed_loss_val = load_validation_results(path)
+        # VAL
+        all_epochs_val += [np.array(epochs_val)]
+        all_loss_val += [running_mean(mixed_loss_val, 1)]
+        all_epochs2 = all_epochs_val[0][0:200]
+        all_loss2 = all_loss_val[0][0:200]
+        # TRAINING
+        # all_epochs += [np.array(steps) / steps_per_epoch]
+        # all_loss += [running_mean(mixed_loss, smooth_n)]
+        # all_times += [t]
 
-        all_epochs2 = all_epochs[0][0:360392]
-        all_loss2 = all_loss[0][0:360392]
+        # all_epochs2 = all_epochs[0][0:360392]
+        # all_loss2 = all_loss[0][0:360392]
 
         # Learning rate
-        lr_decay_v = np.array([lr_d for ep, lr_d in config.lr_decays.items()])
-        lr_decay_e = np.array([ep for ep, lr_d in config.lr_decays.items()])
-        max_e = max(np.max(all_epochs[-1]) + 1, np.max(lr_decay_e) + 1)
-        lr_decays = np.ones(int(np.ceil(max_e)), dtype=np.float32)
-        lr_decays[0] = float(config.learning_rate)
-        lr_decays[lr_decay_e] = lr_decay_v
-        lr = np.cumprod(lr_decays)
-        all_lr += [lr[np.floor(all_epochs[-1]).astype(np.int32)]]
+        # lr_decay_v = np.array([lr_d for ep, lr_d in config.lr_decays.items()])
+        # lr_decay_e = np.array([ep for ep, lr_d in config.lr_decays.items()])
+        # max_e = max(np.max(all_epochs[-1]) + 1, np.max(lr_decay_e) + 1)
+        # lr_decays = np.ones(int(np.ceil(max_e)), dtype=np.float32)
+        # lr_decays[0] = float(config.learning_rate)
+        # lr_decays[lr_decay_e] = lr_decay_v
+        # lr = np.cumprod(lr_decays)
+        # all_lr += [lr[np.floor(all_epochs[-1]).astype(np.int32)]]
 
     # Plots learning rate
     # *******************
@@ -197,7 +205,7 @@ def compare_trainings(list_of_paths, list_of_labels=None):
 
     # Display legends and title
     plt.legend(loc=1)
-    plt.title('Training Loss')
+    plt.title('Validation Loss')
 
     # Customize the graph
     ax = fig.gca()
