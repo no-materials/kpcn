@@ -27,6 +27,10 @@
      - transforms3d==0.3.1
      - seaborn
      
+* Build the distance cuda kernels in `pc_distance`. Open a terminal in this folder, and run:
+
+          make
+
 * Compile the customized Tensorflow operators located in `tf_custom_ops`. Open a terminal in this folder, and run:
 
           sh compile_op.sh
