@@ -2,7 +2,8 @@
      
 * Make sure <a href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html">CUDA</a>  and <a href="https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html">cuDNN</a> are installed. Three configurations have been tested: 
      - TensorFlow 1.4.1, CUDA 8.0 and cuDNN 6.0
-     - TensorFlow 1.12.0, CUDA 9.0 and cuDNN 7.4, gcc/g++ 4.8, Python 3.6.9
+     - TensorFlow 1.12.0, CUDA 9.0 and cuDNN 7.3.1, gcc/g++ 4.8, Python 3.6.9
+     - TensorFlow 1.12.0, CUDA 9.0 and cuDNN 7.4
      - ~~TensorFlow 1.13.0, CUDA 10.0 and cuDNN 7.5~~ (bug found only with this version).
 
 * Tested on a RTX 2080 Ti. Driver version: 450.80.02
