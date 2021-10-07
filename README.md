@@ -1,6 +1,9 @@
 ## KPCN - Kernel Point Completion Network
 KPCN is a learning-based system for point cloud completion consisting of an autoencoder-structured neural network. The encoder uses a local 3D point convolution operator which takes sphere neighborhoods as input and processes them with weights spatially located by a small set of kernel points. In this way, local spatial relationships of the data are considered and encoded efficiently, contrarily to previous shape completion encoder structures which use a global scope during feature extraction. Aside from the rigid version, the convolution operator used also provides a deformable version, that learns local shifts effectively deforming the convolution kernels to make them fit the point cloud geometry. In addition, a regular subsampling per layer method is adapted which in combination with the radius neighbourhoods provides robustness to noise and varying densities. The decoder of the implemented system is a hybrid structure which combines the advantages of fully-connected layers and folding operators, producing a multi-resolution output.
 
+The implemented model was trained in eight object categories from the ShapeNet2048 dataset, was evaluated extensively on synthetic models as well as sensor scanning data and is a canditate for fast completion of extremely sparse real-world sensor data. Additionaly, the model as an integrated module of a wider system was found to be able to improve application results, of which there is need of more complete inputs. In this particular thesis the method was used to solve the problems point cloud registration and similar model retrieval.
+
+
 ## Installation
 For help on installation, refer to <a href="https://github.com/no-materials/kpcn/blob/master/INSTALL.md">INSTALL.md</a>. Note that KPCN has been tested only on Linux. Windows is currently not supported as the code uses tensorflow custom operations. CUDA & cuDNN are required.
 
